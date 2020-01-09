@@ -32,6 +32,12 @@ source("C:/Users/hw3616/Desktop/Imperial/Project1_Forecasting/Project_Coding/iia
 #' information on outpatient visits to health care providers for influenza-like illness
 #' and the number of outpatinent confirmed as ILI.
 
+#' find out why extract.incidence.fluView stop at 2014.
+#' Set up a dataframe that only contains two states and time period is between 2014-49 and 2019-52.
+two_states 
+
+
+
 
 #' Extract incidence data by states.
 # region <- unique(fview_ILINet$REGION)
