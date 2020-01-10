@@ -34,9 +34,11 @@ source("C:/Users/hw3616/Desktop/Imperial/Project1_Forecasting/Project_Coding/iia
 
 #' find out why extract.incidence.fluView stop at 2014.
 #' Set up a dataframe that only contains two states and time period is between 2014-49 and 2019-52.
-two_states 
+two_states <- fview_ILINet[which(fview_ILINet$region == "Alabama" | fview_ILINet$region == "Alaska"),]
+two_states <- two_states[-c(1:435),]
+two_states <- two_states[order(two_states$region),]
 
-
+two_states_inci <- extract.incidence.fluView(two_states,unique(two_states$region),2010,2019)
 
 
 #' Extract incidence data by states.

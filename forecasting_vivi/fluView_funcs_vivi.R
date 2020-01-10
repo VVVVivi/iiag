@@ -76,7 +76,7 @@ extract.incidence.fluView <- function(fluView_data,
                                       minYear,
                                       maxYear){
   ## reorder data by country alphabetically
-  fluView_data <- fluView_data[order(fluView_data$region),]
+  # fluView_data <- fluView_data[order(fluView_data$region),]
   
   ## Setup the week scale in a format consistent with the week format
   ## in the data and cope with 53-week years. Needs the list of 53 week years
@@ -84,7 +84,8 @@ extract.incidence.fluView <- function(fluView_data,
   ## Perhaps should have a few lines to get rid of data NAs and avoid a warning
   ## at the next line?
   fluView_data$yrweek  <- paste(fluView_data$year,sprintf("%02d",as.numeric(as.character(fluView_data$week))),sep="-")
-
+  # fluView_data <- fluView_data[order(fluView_data$yrweek),]
+  
   min(as.numeric(as.character(fluView_data$year)))
   yrs53Weeks <- c(2015,2020)
   currentYear <- minYear
@@ -147,6 +148,7 @@ extract.incidence.fluView <- function(fluView_data,
       if (cur_ind_rtn <= max_ind_rtn) {
         val_rtn <- rtnmat[cur_ind_rtn,cur_iso3]
         val_df <- tmpdf$ilitotal[cur_ind_df]
+        
         if (!is.na(val_df)) {
           if (is.na(val_rtn)) {
             rtnmat[cur_ind_rtn,cur_iso3] <- val_df
