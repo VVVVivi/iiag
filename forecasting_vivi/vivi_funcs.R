@@ -158,15 +158,21 @@ iso3_country <- function(iso3_code){
 
 #' extract_incidence is the function in package idd which can'y be loaded
 #' therefore copy the code 
-extract.incidence.idd <- function(flu_data,
+extract.incidence <- function(flu_data,
                                   country_code,
-                                  year) {
+                                  year,
+                                  yr53week) {
   flu_data <- as.data.frame(flu_data)
   year_names <- rownames(flu_data)
-  # start plotting at week 27 of the current year
-  row_name_start <- paste0(year, "-27") 
-  # stop plotting at week 26 of the next year
-  row_name_end <- paste0(year + 1, "-26")
+  # start from week 01 of current year
+  row_name_start <- paste0(year, "-01") 
+  # stop at week 52 or 53 of current year
+  yr53weeks <- yr53week
+  if (year %in% yr53weeks == TRUE){
+    row_name_end <- paste0(year, "-53")
+  }else{
+    row_name_end <- paste0(year, "-52")
+  }
   # find the corresponding weeks in the data
   row_index_start <- which(rownames(flu_data) == row_name_start)
   row_index_end <- which(rownames(flu_data) == row_name_end)
@@ -182,10 +188,11 @@ extract.incidence.idd <- function(flu_data,
 }
 
 #' check the data availablity in each year
-duration <- function(country,maxYear, minYear){
+duration <- function(flu.incidence, country,minYear, maxYear){
   year_time <- c(minYear:maxYear)
   
-  flu_data_complex <- gbm_complex(fluWHO.incidence, country, 10,1)
+  flu_data_complex <- gbm_complex(flu.incidence, country, 10,1)
+  
   year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
   year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
   all_year <- as.numeric(substr(rownames(flu_data_complex),0,4))

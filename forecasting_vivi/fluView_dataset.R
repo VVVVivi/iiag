@@ -15,9 +15,10 @@ library("knitr")
 library("xgboost")
 library("stringr")
 
-library(cdcfluview)
-library(hrbrthemes)
-library(tidyverse)
+library("cdcfluview")
+library("hrbrthemes")
+library("tidyverse")
+library("ggplot2")
 
 # current verison
 packageVersion("cdcfluview")
@@ -35,10 +36,10 @@ source("C:/Users/hw3616/Desktop/Imperial/Project1_Forecasting/Project_Coding/iia
 #' find out why extract.incidence.fluView stop at 2014.
 #' Set up a dataframe that only contains two states and time period is between 2014-49 and 2019-52.
 two_states <- fview_ILINet[which(fview_ILINet$region == "Alabama" | fview_ILINet$region == "Alaska"),]
-two_states <- two_states[-c(1:435),]
+two_states <- two_states[-c(1:434),]
 two_states <- two_states[order(two_states$region),]
 
-two_states_inci <- extract.incidence.fluView(two_states,unique(two_states$region),2010,2019)
+two_states_inci <- extract.incidence.fluView(two_states,unique(two_states$region),2010,2020,c(2014,2020))
 
 
 #' Extract incidence data by states.
@@ -47,7 +48,8 @@ two_states_inci <- extract.incidence.fluView(two_states,unique(two_states$region
 fview_incidence <- extract.incidence.fluView(fview_ILINet,
                                              sel_states = unique(fview_ILINet$region),
                                              minYear = 2010,
-                                             maxYear = 2019)
+                                             maxYear = 2019,
+                                             c(2014,2020))
 
 minprop <- 0.5
 
@@ -55,7 +57,16 @@ minprop <- 0.5
 #' of dataset
 fview_incidence <- fview_incidence[-c(1:39),]
 
-us_states <- names(which(colSums(is.na(fview_incidence))/dim(fview_incidence)[1]<minprop))
+#' Florida and Commonwealth of the Northern Mariana Islands are excluded.
+us_states <- names(which(colSums(is.na(fview_incidence))/dim(fview_incidence)[1]<minprop)) # 53 states
+
+fview_incidence <- extract.incidence.fluView(fview_ILINet,
+                                             sel_states = us_states,
+                                             minYear = 2010,
+                                             maxYear = 2019,
+                                             c(2014,2020))
+
+
 
 #' Check if the data of remained states are eligible for xgboost
 #' check the data availablity in each year
@@ -63,9 +74,11 @@ us_states <- names(which(colSums(is.na(fview_incidence))/dim(fview_incidence)[1]
 #' entries in certain years.
 state_year <- NULL
 for (i in 1:length(us_states)){
-  tmp <- duration(us_states[i])
+  tmp <- duration(fview_incidence,us_states[i],2010,2019)
   state_year <- rbind(state_year, tmp)
 }
+
+
 state_year <- as.data.frame(state_year)
 colnames(state_year) <- c("State","2010","2011","2012","2013","2014","2015",
                             "2016","2017","2018","2019", "start_year","end_year")

@@ -74,7 +74,8 @@ extract.incidence.fluView <- function(fluView_data,
                                       # sel_ag,
                                       # sel_measure,
                                       minYear,
-                                      maxYear){
+                                      maxYear,
+                                      yr53week){
   ## reorder data by country alphabetically
   # fluView_data <- fluView_data[order(fluView_data$region),]
   
@@ -84,10 +85,9 @@ extract.incidence.fluView <- function(fluView_data,
   ## Perhaps should have a few lines to get rid of data NAs and avoid a warning
   ## at the next line?
   fluView_data$yrweek  <- paste(fluView_data$year,sprintf("%02d",as.numeric(as.character(fluView_data$week))),sep="-")
-  # fluView_data <- fluView_data[order(fluView_data$yrweek),]
   
   min(as.numeric(as.character(fluView_data$year)))
-  yrs53Weeks <- c(2015,2020)
+  yrs53Weeks <- yr53week
   currentYear <- minYear
   vecWeekScale <- NULL
   while (currentYear <= maxYear) {
@@ -163,27 +163,5 @@ extract.incidence.fluView <- function(fluView_data,
   
   ## Return the populated incidence matrix as only result of function
   rtnmat 
-}
-
-while (cur_ind_df <= max_ind_df) {
-  while (
-    sel_weeks[cur_ind_rtn] != tmpdf$YRWEEK[cur_ind_df] &&
-    cur_ind_rtn <= max_ind_rtn
-  ) {
-    cur_ind_rtn <- cur_ind_rtn + 1
-  }
-  if (cur_ind_rtn <= max_ind_rtn) {
-    val_rtn <- rtnmat[cur_ind_rtn,cur_iso3]
-    val_df <- tmpdf$ILITOTAL[cur_ind_df]
-    if (!is.na(val_df)) {
-      if (is.na(val_rtn)) {
-        rtnmat[cur_ind_rtn,cur_iso3] <- val_df
-      } else {
-        rtnmat[cur_ind_rtn,cur_iso3] <-
-          rtnmat[cur_ind_rtn,cur_iso3] + val_df
-      }
-    }
-  }
-  cur_ind_df <- cur_ind_df + 1
 }
 
