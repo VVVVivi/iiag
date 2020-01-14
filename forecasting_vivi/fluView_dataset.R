@@ -74,10 +74,10 @@ fview_incidence <- extract.incidence.fluView(fview_ILINet,
 #' entries in certain years.
 state_year <- NULL
 for (i in 1:length(us_states)){
-  tmp <- duration(fview_incidence,us_states[i],2010,2019)
+  tmp <- duration(fview_incidence,us_states[i],2010,2019,2014)
   state_year <- rbind(state_year, tmp)
 }
-
+a <- duration(fview_incidence,us_states[1],2010,2019, 2014)
 
 state_year <- as.data.frame(state_year)
 colnames(state_year) <- c("State","2010","2011","2012","2013","2014","2015",
@@ -90,7 +90,9 @@ state_no19Or10 <- state_year$State[which(state_year$`2019`=="No" | state_year$`2
                                             
 state_no10 <- state_year$State[which(state_year$`2010`=="No")]
 
-state_no19Or10 <- us_states[which(us_states %in% state_no19Or10)] 
+state_no19Or10 <- us_states[which(us_states %in% state_no19Or10)]
+# Virgin Islands starts from 2011 and Puerto Rico starts from 2013.
+
 
 #' List of US states will be included in the analysis.
 us_xgb <- us_states
@@ -113,4 +115,5 @@ fview_incidence <- extract.incidence.who(fview_ILINet,
 )
 
 #' XGB model
+
 

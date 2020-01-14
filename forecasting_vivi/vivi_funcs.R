@@ -155,6 +155,30 @@ iso3_country <- function(iso3_code){
   return(country)
 }
 
+extract.incidence.who <- function(flu_data,
+                                  country_code,
+                                   year) {
+  flu_data <- as.data.frame(flu_data)
+  year_names <- rownames(flu_data)
+  # start plotting at week 27 of the current year
+  row_name_start <- paste0(year, "-27") 
+  # stop plotting at week 26 of the next year
+  row_name_end <- paste0(year + 1, "-26")
+  # find the corresponding weeks in the data
+  row_index_start <- which(rownames(flu_data) == row_name_start)
+  row_index_end <- which(rownames(flu_data) == row_name_end)
+  # extrac the week number and incidence for those weeks
+  incidence <- flu_data[seq(row_index_start, row_index_end), 
+                        colnames(flu_data) == country_code]
+  time_name_vec <- year_names[seq(row_index_start, row_index_end)]
+  
+  incidence_data <- data.frame(t = seq_along(time_name_vec), 
+                               time_name = time_name_vec, 
+                               incidence = incidence)
+  return(incidence_data)
+
+}
+
 
 #' extract_incidence is the function in package idd which can'y be loaded
 #' therefore copy the code 
@@ -188,10 +212,10 @@ extract.incidence <- function(flu_data,
 }
 
 #' check the data availablity in each year
-duration <- function(flu.incidence, country,minYear, maxYear){
+duration <- function(flu.incidence, country,minYear, maxYear, yr53week){
   year_time <- c(minYear:maxYear)
   
-  flu_data_complex <- gbm_complex(flu.incidence, country, 10,1)
+  flu_data_complex <- gbm_complex(flu.incidence, country, 10,1,yr53week)
   
   year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
   year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
@@ -215,14 +239,14 @@ duration <- function(flu.incidence, country,minYear, maxYear){
 
 #' Keep data frames used for 1,2,3,4-week ahead forecast are in the same size
 adjust.data.size <- function(flu_data,country,category,numWeek_ahead){
-  complex1 <- gbm_complex(flu_data,country,category,1)
-  complex2 <- gbm_complex(flu_data,country,category,2)
-  complex3 <- gbm_complex(flu_data,country,category,3)
-  complex4 <- gbm_complex(flu_data,country,category,4)
+  complex1 <- gbm_complex_WHO(flu_data,country,category,1)
+  complex2 <- gbm_complex_WHO(flu_data,country,category,2)
+  complex3 <- gbm_complex_WHO(flu_data,country,category,3)
+  complex4 <- gbm_complex_WHO(flu_data,country,category,4)
   week <- intersect(rownames(complex1),intersect(rownames(complex2),
                                                  intersect(rownames(complex3),rownames(complex4))))
   
-  complex <- gbm_complex(flu_data,country,category,numWeek_ahead)
+  complex <- gbm_complex_WHO(flu_data,country,category,numWeek_ahead)
   index <- c()
   for (i in 1:nrow(complex)){
     if(rownames(complex)[i] %in% week == FALSE){
@@ -370,7 +394,6 @@ compare_accuracy <- function(country_list,flu_data,num_category, train_num_start
   return(result)
 
 }
-
 
 #' shows the output of xgboost model 
 xgboost.model.train <- function(flu_data, country, num_category,
