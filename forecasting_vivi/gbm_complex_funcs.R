@@ -214,8 +214,9 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
   initial_data <- as.data.frame(initial_data)
   
   # Divide incidence into 10 categories
-  initial_data2 <- cbind(initial_data, cut_interval(initial_data$incidence, n=num_category))
+  initial_data2 <- cbind(initial_data, cut_interval(initial_data$incidence, n=num_category,ordered_result = TRUE))
   colnames(initial_data2)[4] <- 'category'
+  
   
   # match the intervals with numeric categories
   levels_index <- levels(initial_data2$category)
@@ -223,11 +224,13 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
     x <- initial_data2$category[i]
     if (is.na(x)==FALSE){
       y <- which(levels(initial_data2$category)==x)
-      initial_data2$category2[i] <- as.numeric(y)
+      initial_data2$category2[i] <- y
+      # initial_data2$category2[i] <- as.numeric(y)
     }else{
       initial_data2$category2[i] <- NA
     }
   }
+  initial_data2$category2 <- factor(initial_data2$category2, ordered = TRUE)
   
   # convert into suitable stucture for gbm
   incidence_gbm <- matrix(NA, nrow = (dim(initial_data2)[1]-5), ncol=3)
@@ -294,8 +297,8 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
     tmp <- grep(feb_week[i], rownames(incidence_gbm))
     feb_row <- append(feb_row, tmp)
   }
-  incidence_gbm$month[feb_row] <- "Feburary"
-  
+  incidence_gbm$month[feb_row] <- "February"
+
   mar_row <- c()
   mar_week <- paste("-", 10:14, sep = "")
   for (i in 1:length(mar_week)){
@@ -392,7 +395,7 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
       incidence_gbm$season[i] <- "spring"
     }
   }
-  
+
   # deal with NA data
   b <- c()
   for(i in 1:nrow(incidence_gbm)){

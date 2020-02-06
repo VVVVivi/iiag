@@ -108,12 +108,16 @@ for (i in 1:length(state_no19Or10)){
 #' So far I (Vivi) did this manually, will write a function to check automatically.
 
 # extract incidence of eligible states.
-fview_incidence <- extract.incidence.who(fview_ILINet,
-                                         us_xgb,
-                                         minYear = 2010,
-                                         maxYear = 2019
-)
+fview_incidence <- extract.incidence.fluView(fview_ILINet,
+                                             us_xgb,
+                                             minYear = 2010,
+                                             maxYear = 2020,
+                                             c(2014,2020))
 
 #' XGB model
+#' gbm_complex_WHO: shape data structure and add features
+
+
+
 
 

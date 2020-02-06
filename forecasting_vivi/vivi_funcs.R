@@ -369,7 +369,7 @@ compare_accuracy_indi <- function(individual_country, flu_data, num_category,tra
   result$score <- score
   
   return(result)
-}
+} 
 
 
 #' Function of caculating the accuracy metric of xgboost model
