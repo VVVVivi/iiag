@@ -26,7 +26,10 @@ packageVersion("cdcfluview")
 
 fview_ILINet <- ilinet(region = "state")
 
-# source("E:/Imperial/iiag/forecasting_vivi/fluView_funcs_vivi.R")
+
+source("E:/Imperial/iiag/forecasting_vivi/fluView_funcs_vivi.R")
+source("E:/Imperial/iiag/forecasting_vivi/vivi_funcs.R")
+source("E:/Imperial/iiag/forecasting_vivi/gbm_complex_funcs.R")
 source("C:/Users/hw3616/Desktop/Imperial/Project1_Forecasting/Project_Coding/iiag/forecasting_vivi/fluView_funcs_vivi.R")
 
 #' U.S. Outpatient Influenza-like Illness Surveillance Network (ILINet) consist of 
@@ -63,7 +66,7 @@ us_states <- names(which(colSums(is.na(fview_incidence))/dim(fview_incidence)[1]
 fview_incidence <- extract.incidence.fluView(fview_ILINet,
                                              sel_states = us_states,
                                              minYear = 2010,
-                                             maxYear = 2019,
+                                             maxYear = 2020,
                                              c(2014,2020))
 
 
@@ -74,11 +77,14 @@ fview_incidence <- extract.incidence.fluView(fview_ILINet,
 #' entries in certain years.
 state_year <- NULL
 for (i in 1:length(us_states)){
-  tmp <- duration(fview_incidence,us_states[i],2010,2019,2014)
+  tmp <- duration(fview_incidence,us_states[i],2010,2020,c(2014,2020))
   state_year <- rbind(state_year, tmp)
 }
-a <- duration(fview_incidence,us_states[1],2010,2019, 2014)
+a <- duration(fview_incidence,us_states[1],2010,2020,c(2014,2020))
 
+a <- gbm_complex_WHO(fview_incidence,us_states[1],10,1)
+
+ 
 state_year <- as.data.frame(state_year)
 colnames(state_year) <- c("State","2010","2011","2012","2013","2014","2015",
                             "2016","2017","2018","2019", "start_year","end_year")

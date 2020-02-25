@@ -155,7 +155,7 @@ iso3_country <- function(iso3_code){
   return(country)
 }
 
-extract.incidence.who <- function(flu_data,
+extract.incidence.who.centre <- function(flu_data,
                                   country_code,
                                    year) {
   flu_data <- as.data.frame(flu_data)

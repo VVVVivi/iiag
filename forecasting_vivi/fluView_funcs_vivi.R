@@ -165,3 +165,28 @@ extract.incidence.fluView <- function(fluView_data,
   rtnmat 
 }
 
+extract.incidence.fluView.centre <- function(flu_data,
+                                             country_code,
+                                             year) {
+  flu_data <- as.data.frame(flu_data)
+  year_names <- rownames(flu_data)
+  # start plotting at week 27 of the current year
+  row_name_start <- paste0(year, "-27") 
+  # stop plotting at week 26 of the next year
+  row_name_end <- paste0(year + 1, "-26")
+  # find the corresponding weeks in the data
+  row_index_start <- which(rownames(flu_data) == row_name_start)
+  row_index_end <- which(rownames(flu_data) == row_name_end)
+  # extrac the week number and incidence for those weeks
+  incidence <- flu_data[seq(row_index_start, row_index_end), 
+                        colnames(flu_data) == country_code]
+  time_name_vec <- year_names[seq(row_index_start, row_index_end)]
+  
+  incidence_data <- data.frame(t = seq_along(time_name_vec), 
+                               time_name = time_name_vec, 
+                               incidence = incidence)
+  return(incidence_data)
+  
+}
+
+
