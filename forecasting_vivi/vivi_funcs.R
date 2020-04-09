@@ -182,7 +182,7 @@ extract.incidence.who.centre <- function(flu_data,
 
 #' extract_incidence is the function in package idd which can'y be loaded
 #' therefore copy the code 
-extract.incidence <- function(flu_data,
+extract.incidence.centre <- function(flu_data,
                                   country_code,
                                   year,
                                   yr53week) {
@@ -497,6 +497,10 @@ freq_table <- function(prediction, row_col){
 }
 
 heat_plot <- function(frequencyTable, countryName, score){
+  require("RColorBrewer")
+  require("raster")
+  require("rasterVis")
+  
   frequencyMatrix <- as.matrix(frequencyTable)
   colnames(frequencyMatrix) <- c(1:10)
   rownames(frequencyMatrix) <- c(1:10)

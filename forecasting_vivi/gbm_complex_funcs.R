@@ -4,7 +4,7 @@ gbm_complex <- function(data, country, num_category,nWeek_ahead,yr53week){
   yr <- seq(2010, 2019, by = 1)
   initial_data <- c()
   for (i in 1:length(yr)){
-    tmp <- extract.incidence(data, country_code = country, yr[i],yr53week)
+    tmp <- extract.incidence.centre(data, country_code = country, yr[i],yr53week)
     initial_data <- rbind(initial_data, tmp)
   }
   initial_data <- as.data.frame(initial_data)
@@ -165,7 +165,7 @@ gbm_complex <- function(data, country, num_category,nWeek_ahead,yr53week){
   incidence_gbm$month[nov_row] <- "November"
   
   dec_row <- c()
-  dec_week <- paste("-", 49:52, sep = "")
+  dec_week <- paste("-", 49:53, sep = "")
   for (i in 1:length(dec_week)){
     tmp <- grep(dec_week[i], rownames(incidence_gbm))
     dec_row <- append(dec_row, tmp)
@@ -372,7 +372,7 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
   incidence_gbm$month[nov_row] <- "November"
   
   dec_row <- c()
-  dec_week <- paste("-", 49:52, sep = "")
+  dec_week <- paste("-", 49:53, sep = "")
   for (i in 1:length(dec_week)){
     tmp <- grep(dec_week[i], rownames(incidence_gbm))
     dec_row <- append(dec_row, tmp)
@@ -411,11 +411,11 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
   incidence_gbm
 }
 
-gbm_complex_fluView <- function(data, us_states, num_category,nWeek_ahead,yr53week){
-  yr <- seq(2010, 2017, by = 1)
+gbm_complex_fview <- function(data, us_states, num_category,nWeek_ahead,yr53week){
+  yr <- seq(2010, 2020, by = 1)
   initial_data <- c()
   for (i in 1:length(yr)){
-    tmp <- extract.incidence.fluView.centre(data, us_states, yr[i],yr53week)
+    tmp <- extract.incidence.centre(data, us_states, yr[i],yr53week)
     initial_data <- rbind(initial_data, tmp)
   }
   initial_data <- as.data.frame(initial_data)
@@ -423,7 +423,6 @@ gbm_complex_fluView <- function(data, us_states, num_category,nWeek_ahead,yr53we
   # Divide incidence into 10 categories
   initial_data2 <- cbind(initial_data, cut_interval(initial_data$incidence, n=num_category,ordered_result = TRUE))
   colnames(initial_data2)[4] <- 'category'
-  
   
   # match the intervals with numeric categories
   levels_index <- levels(initial_data2$category)
@@ -482,7 +481,6 @@ gbm_complex_fluView <- function(data, us_states, num_category,nWeek_ahead,yr53we
     colnames(incidence_gbm) <- c('Y_week0','week_4','week_5')
     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
   }
-  
   
   # add potential covariates
   # month: Jan - Dec
@@ -579,11 +577,12 @@ gbm_complex_fluView <- function(data, us_states, num_category,nWeek_ahead,yr53we
   incidence_gbm$month[nov_row] <- "November"
   
   dec_row <- c()
-  dec_week <- paste("-", 49:52, sep = "")
+  dec_week <- paste("-", 49:53, sep = "")
   for (i in 1:length(dec_week)){
-    tmp <- grep(dec_week[i], rownames(incidence_gbm))
+    tmp <- grep(dec_week[i],rownames(incidence_gbm))
     dec_row <- append(dec_row, tmp)
   }
+  
   incidence_gbm$month[dec_row] <- "December"
   
   # season 
