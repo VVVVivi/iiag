@@ -412,7 +412,7 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
 }
 
 gbm_complex_fview <- function(data, us_states, num_category,nWeek_ahead,yr53week){
-  yr <- seq(2010, 2020, by = 1)
+  yr <- seq(2010, 2021, by = 1)
   initial_data <- c()
   for (i in 1:length(yr)){
     tmp <- extract.incidence.centre(data, us_states, yr[i],yr53week)
