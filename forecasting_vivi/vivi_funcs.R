@@ -9,8 +9,8 @@ load.iiag.data.fluid <- function(datadir="../iiag_data/data_old/") {
     if (!is.na(match("ISO_Week",curnames))) {
       newnames[match("ISO_Week",curnames)] <- "ISO_WEEK"
     }
-    if (!is.na(match("?..ISO3",curnames))) {
-      newnames[match("?..ISO3",curnames)] <- "ISO3"
+    if (!is.na(match("ï..ISO3",curnames))) {
+      newnames[match("ï..ISO3",curnames)] <- "ISO3"
     }
     newnames
   }
@@ -20,7 +20,7 @@ load.iiag.data.fluid <- function(datadir="../iiag_data/data_old/") {
   fid_old_3 <- read.csv(paste0(datadir,"/2017-2018_FluIDData.csv",sep=""))
   fid_old_2 <- read.csv(paste0(datadir,"/2014-2016_FluIDData.csv",sep=""))
   fid_old_1 <- read.csv(paste0(datadir,"/2010-2013_FluIDData.csv",sep=""))
-  fid_old_0 <- read.csv(paste0(datadir,"/2000-2009_FluIDData.csv",sep=""))
+  # fid_old_0 <- read.csv(paste0(datadir,"/2000-2009_FluIDData.csv",sep=""))
   # fnet_this <- read.csv(paste(datadir,"/2017-2018_FluNetData_20190110.csv",sep=""))
   # fnet_old_3 <- read.csv(paste(datadir,"/2017-2018_FluNetData.csv",sep=""))
   # fnet_old_2 <- read.csv(paste(datadir,"/2014-2016_FluNetData.csv",sep=""))
@@ -36,7 +36,7 @@ load.iiag.data.fluid <- function(datadir="../iiag_data/data_old/") {
   # names(fnet_old_2) <- fix_headers(fnet_old_2)
   # names(fnet_old_3) <- fix_headers(fnet_old_3)
   # names(fnet_this) <- fix_headers(fnet_this)
-  
+
   ## Use rbind to make the large tables. Should throw an error if the column
   ## names change in the future.
   # dfId <- rbind(fid_old_0,fid_old_2,fid_old_2,fid_old_3,fid_this)
@@ -59,7 +59,8 @@ extract.incidence.who <- function( dfId,
                                    sel_ag,
                                    sel_measure,
                                    minYear,
-                                   maxYear) {
+                                   maxYear,
+                                   yr53week) {
   
   ## Setup the week scale in a format consistent with the week format
   ## in the data and cope with 53-week years. Needs the list of 53 week years
@@ -68,11 +69,11 @@ extract.incidence.who <- function( dfId,
   ## at the next line?
   dfId$yrweek <- paste(dfId$ISO_YEAR,sprintf("%02d",as.numeric(dfId$ISO_WEEK)),sep="-")
   min(dfId$ISO_YEAR)
-  yrs53Weeks <- 2015
+  # yrs53Weeks <- 2015
   currentYear <- minYear
   vecWeekScale <- NULL
   while (currentYear <= maxYear) {
-    if (currentYear %in% yrs53Weeks) {
+    if (currentYear %in% yr53week) {
       max_week <- 53
     } else {
       max_week <- 52
@@ -155,6 +156,31 @@ iso3_country <- function(iso3_code){
   return(country)
 }
 
+extract.incidence.who.calender <- function(flu_data,
+                                         country_code,
+                                         year,
+                                         yr53week) {
+  flu_data <- as.data.frame(flu_data)
+  year_names <- rownames(flu_data)
+  # start plotting at ISO week 1 of the current year
+  row_name_start <- paste0(year, "-01") 
+  # stop plotting at ISO week 52 ro 53 of the current
+  row_name_end <- ifelse(year != yr53week, paste0(year, "-52"), paste0(year, "-53"))
+  # find the corresponding weeks in the data
+  row_index_start <- which(rownames(flu_data) == row_name_start)
+  row_index_end <- which(rownames(flu_data) == row_name_end)
+  # extrac the week number and incidence for those weeks
+  incidence <- flu_data[seq(row_index_start, row_index_end), 
+                        colnames(flu_data) == country_code]
+  time_name_vec <- year_names[seq(row_index_start, row_index_end)]
+  
+  incidence_data <- data.frame(t = seq_along(time_name_vec), 
+                               time_name = time_name_vec, 
+                               incidence = incidence)
+  return(incidence_data)
+  
+}
+
 extract.incidence.who.centre <- function(flu_data,
                                   country_code,
                                    year) {
@@ -180,7 +206,7 @@ extract.incidence.who.centre <- function(flu_data,
 }
 
 
-#' extract_incidence is the function in package idd which can'y be loaded
+#' extract_incidence is the function in package idd which can't be loaded
 #' therefore copy the code 
 extract.incidence.centre <- function(flu_data,
                                   country_code,
@@ -197,6 +223,7 @@ extract.incidence.centre <- function(flu_data,
   }else{
     row_name_end <- paste0(year, "-52")
   }
+
   # find the corresponding weeks in the data
   row_index_start <- which(rownames(flu_data) == row_name_start)
   row_index_end <- which(rownames(flu_data) == row_name_end)
@@ -212,54 +239,72 @@ extract.incidence.centre <- function(flu_data,
 }
 
 #' check the data availablity in each year
-duration <- function(flu.incidence, country,minYear, maxYear, yr53week){
+duration <- function(flu_incidence, country_list, numWeek_ahead, minYear, maxYear, yr53week){
   year_time <- c(minYear:maxYear)
   
-  flu_data_complex <- gbm_complex(flu.incidence, country, 10,1,yr53week)
-  
-  year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
-  year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
-  all_year <- as.numeric(substr(rownames(flu_data_complex),0,4))
-  
-  country_year <- c()
-  
-  for (i in 1:length(year_time)){
-    if (year_time[i] %in% all_year == TRUE){
-      tmp <- "Yes"
+  country_year <- NULL
+
+  for (i in 1:length(country_list)){
+    country <- country_list[i]
+    df_country <- flu_incidence[, which(colnames(flu_incidence) == country)]
+    sample_size <- length(df_country)
+    
+    flu_data_complex <- gbm_complex_WHO(flu_incidence, country, 10, numWeek_ahead, yr53week)
+    
+    year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
+    year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
+    all_year <- as.numeric(substr(rownames(flu_data_complex),0,4))
+    
+    country_year2 <- c()
+
+    for (i in 1:length(year_time)){
+      # tmp <- ifelse(year_time[i] %in% all_year == TRUE, 
+      #               ifelse(length(which(is.na(df_country)))/sample_size < 0.5, "Yes", "No"), "No")
+      
+      if (year_time[i] %in% all_year == TRUE){
+        tmp <- "Yes"
+      }
+      if (year_time[i] %in% all_year == FALSE){
+        tmp <- "No"
+      }
+      country_year2 <- append(country_year2, tmp)
     }
-    if (year_time[i] %in% all_year == FALSE){
-      tmp <- "No"
-    }
-    country_year <- append(country_year, tmp)
+    country_year2 <- c(country, country_year2, year_start, year_end)
+    country_year <- rbind(country_year, country_year2)
   }
-  country_year <- c(country, country_year, year_start, year_end)
+  
+  # add colnames and rownames for the data frame
+  country_year <- as.data.frame(country_year)
+  colnames(country_year) <- c("Country","2010","2011","2012","2013","2014","2015",
+                            "2016","2017", "start_year","end_year")
+  country_year$end_year <- as.numeric(as.character(country_year$end_year))
+  country_year$start_year <- as.numeric(as.character(country_year$start_year))
+  rownames(country_year) <- c(1:nrow(country_year))
   
   country_year
 }
 
+
 #' Keep data frames used for 1,2,3,4-week ahead forecast are in the same size
-adjust.data.size <- function(flu_data,country,category,numWeek_ahead){
-  complex1 <- gbm_complex_WHO(flu_data,country,category,1)
-  complex2 <- gbm_complex_WHO(flu_data,country,category,2)
-  complex3 <- gbm_complex_WHO(flu_data,country,category,3)
-  complex4 <- gbm_complex_WHO(flu_data,country,category,4)
+adjust.data.size <- function(flu_data,country,category,numWeek_ahead, yr53week){
+
+  complex1 <- gbm_complex_WHO(flu_data,country,category,1, yr53week)
+  complex2 <- gbm_complex_WHO(flu_data,country,category,2, yr53week)
+  complex3 <- gbm_complex_WHO(flu_data,country,category,3, yr53week)
+  complex4 <- gbm_complex_WHO(flu_data,country,category,4, yr53week)
   week <- intersect(rownames(complex1),intersect(rownames(complex2),
                                                  intersect(rownames(complex3),rownames(complex4))))
   
-  complex <- gbm_complex_WHO(flu_data,country,category,numWeek_ahead)
-  index <- c()
-  for (i in 1:nrow(complex)){
-    if(rownames(complex)[i] %in% week == FALSE){
-      tmp <- i
-      index <- append(index, tmp)
-    }
-  }
-  if (length(index) == 0){
+  complex <- gbm_complex_WHO(flu_data, country, 10, numWeek_ahead, yr53week)
+  
+  # complex <- ifelse(length(which(rownames(complex) %in% week == FALSE)) == 0, complex,
+  #                    complex[-which(rownames(complex) %in% week == FALSE),])
+  if (length(which(rownames(complex) %in% week == FALSE)) == 0){
     complex <- complex
   }else{
-    complex <- complex[-(index),]
+    complex <- complex[-which(rownames(complex) %in% week == FALSE),]
   }
-  
+
   complex
 }
 
@@ -280,17 +325,82 @@ xgboost_dat <- function(flu_data_complex, start_year, end_year){
   
   # XGBoost requires the classes to be in a numeric format, starting with 0.
   dat_labels <- as.numeric(flu_data_complex$Y_week0)-1
-  
   dat <- model.matrix(~.+0, contrasts.arg = lapply(flu_data_complex[,4:5], contrasts, contrasts=FALSE),
                       data = flu_data_complex[,-1])
   
   if (class(dat_labels) != "numeric"){
     dat_labels <- as.numeric(as.factor(dat_labels))
   }
+
   new_dat <- dat[start_index:end_index,]
   new_dat_labels <- dat_labels[start_index:end_index]
   xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
   xgb_dat
+}
+
+
+rolling_dat <- function(flu_data_complex, start_year, end_year){
+  require(dplyr)
+  
+  flu_data_complex$month <- as.factor(flu_data_complex$month)
+  flu_data_complex$season <- as.factor(flu_data_complex$season)
+  
+  start_year <- as.character(start_year)
+  end_year <- as.character(end_year)
+  
+  start_index <- grep(start_year,rownames(flu_data_complex))[1]
+  end <- grep(end_year,rownames(flu_data_complex))
+  end_index <- end[length(end)]
+  
+  # XGBoost requires the classes to be in a numeric format, starting with 0.
+  dat_labels <- as.numeric(flu_data_complex$Y_week0)-1
+  dat <- model.matrix(~.+0, contrasts.arg = lapply(flu_data_complex[,4:5], contrasts, contrasts=FALSE),
+                      data = flu_data_complex[,-1])
+
+  if (class(dat_labels) != "numeric"){
+    dat_labels <- as.numeric(as.factor(dat_labels))
+  }
+  new_dat <- dat[start_index:end_index,]
+  new_dat_labels <- dat_labels[start_index:end_index]
+  # xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
+  res <- list(new_dat, new_dat_labels)
+  
+  res
+}
+
+xgboost_rolling_dat <- function(train_list, test_list, nWeek_ahead, i){
+  train_matrix <- as.matrix(train_list[[1]])
+  train_labels <- as.numeric(train_list[[2]])
+  
+  test_matrix <- as.matrix(test_list[[1]])
+  test_labels <- as.numeric(test_list[[2]])
+  
+  if(nWeek_ahead == 1){
+    if(i != 0){
+      new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>% 
+        as.matrix()
+      new_train_labels <- append(train_labels, head(test_labels,i)) %>% 
+        as.numeric()
+    }else{
+      new_train_matrix <- train_matrix
+      new_train_labels <- train_labels
+    }
+    
+    new_test_matrix <- t(test_matrix[i+1,]) %>% 
+      as.matrix()
+    new_test_labels <- test_labels[i+1] %>% 
+      as.numeric()
+  }
+  if(nWeek_ahead == 2){
+    
+  }
+  
+  xgb_train <- xgb.DMatrix(data = new_train_matrix, label = new_train_labels)
+  xgb_test <- xgb.DMatrix(data = new_test_matrix, label = new_test_labels)
+  
+  xgb_data <- list(xgb_train, xgb_test)
+  
+  xgb_data
 }
 
 
@@ -299,9 +409,10 @@ xgboost_dat <- function(flu_data_complex, start_year, end_year){
 #' train_num_end: calculates the end year of traingin set. End year = start year + train_num_end 
 #' = 2010 + train_num_start +train_num_end
 xgboost.model.pred <- function(flu_data, country, num_category,
-                               train_num_start, train_num_end, nWeek_ahead){
+                               train_num_start, train_num_end, 
+                               nWeek_ahead, yr53week){
   # set up dataset for xgboost
-  flu_data_complex <- adjust.data.size(flu_data, country, num_category, nWeek_ahead)
+  flu_data_complex <- adjust.data.size(flu_data, country, num_category, nWeek_ahead, yr53week)
   
   year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
   year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
@@ -352,6 +463,97 @@ xgboost.model.pred <- function(flu_data, country, num_category,
   pred_timeseries
 }
 
+#' Rolling forecast 
+# rw_train <- function(xgb_train, i){
+#   if(i == 0){
+#     xgb_tr_new <- xgb_train
+#   }else{
+#     xgb_tr_new <- rbind(xgb_train, head(xgb_train, i))
+#   }
+#   xgb_tr_new
+# }
+# 
+# rw_test <- function(xgb_test, i){
+#   xgb_ts_new <- t(xgb_test[i,])
+#   rownames(xgb_ts_new) <- rownames(xgb_test)[i]
+#   
+#   xgb_ts_new
+# }
+
+xgboost.rolling.pred <- function(flu_data, country, num_category,
+                                 train_num_start, train_num_end, 
+                                 nWeek_ahead, ts_year, yr53week){
+  # set up dataset for xgboost
+  flu_data_complex <- adjust.data.size(flu_data, country, num_category, nWeek_ahead, yr53week)
+  
+  year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
+  year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
+  start_year_tr <- year_start + train_num_start
+  end_year_tr <-  start_year_tr + train_num_end
+  start_year_ts <- end_year_tr + 1
+  
+  if ((start_year_ts == 2017 && year_end == 2018) == TRUE ){
+    end_year_ts <- year_end
+  }else{
+    end_year_ts <- start_year_ts
+  }
+  xgb_tr_list <- rolling_dat(flu_data_complex, start_year_tr, end_year_tr)
+  xgb_ts_list <- rolling_dat(flu_data_complex, start_year_ts, end_year_ts)
+  
+  # create a empty to store raw probability output
+  pred_mat <- NULL
+
+  for (i in 0:(dim(xgb_ts_list[[1]])[1]-1)){
+    # tr_rolling <- rw_train(xgb_tr, i)
+    # ts_rolling <- rw_test(xgb_ts, i+1)
+    # 
+    # tr_labels <- rownames(tr_rolling)
+    # ts_labels <- rownames(ts_rolling)
+    # xgb_tr_new <- xgb.DMatrix(data = tr_rolling,label = tr_labels)
+    # xgb_ts_new <- xgb.DMatrix(data = ts_rolling,label = ts_labels)
+    xgb_data <- xgboost_rolling_dat(xgb_tr_list, xgb_ts_list, i)
+    
+    xgb_train <- xgb_data[[1]]
+    xgb_test <- xgb_data[[2]]
+    
+    # train the model
+    params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
+                         subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
+    watchlist <- list(train = xgb_train, test = xgb_test)
+    xgb_model <- xgb.train(params = params.train, data = xgb_train, nrounds = 100, 
+                           watchlist = watchlist,verbose = 2, print_every_n = 10,
+                           early_stopping_round = 20)
+    
+    xgb_pred <- predict(xgb_model, newdata = xgb_test)
+    pred_mat <- rbind(pred_mat, xgb_pred)
+  
+  }
+
+  start_year_ts_index <- grep(start_year_ts,rownames(flu_data_complex))[1]
+  end_ts <- grep(end_year_ts,rownames(flu_data_complex))
+  end_year_ts_index <- end_ts[length(end_ts)]
+  xgb_val_out <- pred_mat %>% 
+    data.frame() %>%
+    mutate(max = max.col(., ties.method = "last"), 
+           category = flu_data_complex$Y_week0[start_year_ts_index:end_year_ts_index])
+  
+  pred_timeseries <- rownames(flu_data_complex)[start_year_ts_index:end_year_ts_index] %>% 
+    cbind(xgb_val_out[,(ncol(xgb_val_out)-1):ncol(xgb_val_out)]) %>%
+    data.frame()
+  colnames(pred_timeseries) <- c("week_time", "Prediction", "Observation")
+  pred_timeseries$Observation <- as.numeric(pred_timeseries$Observation)
+  pred_timeseries$Prediction <- as.numeric(pred_timeseries$Prediction)
+  for (i in 1:nrow(pred_timeseries)){
+    if (pred_timeseries[i,2]==pred_timeseries[i,3]){
+      pred_timeseries$Accurate[i] <- 1
+    }else{
+      pred_timeseries$Accurate[i] <- 0
+    }
+  }
+  pred_timeseries
+}
+
+
 #' Function that gives individual country forecast result and accuracy score
 compare_accuracy_indi <- function(individual_country, flu_data, num_category,train_num_start, 
                                   train_num_end,nWeek_ahead){
@@ -372,12 +574,31 @@ compare_accuracy_indi <- function(individual_country, flu_data, num_category,tra
 } 
 
 
+compare_accuracy_indi_rolling <- function(individual_country, flu_data, num_category,train_num_start, 
+                                  train_num_end, nWeek_ahead, ts_year, yr53week){
+  country_list <- individual_country
+  individual_pred <- xgboost.rolling.pred(flu_data,country_list,num_category,
+                                          train_num_start, train_num_end,nWeek_ahead,
+                                          ts_year, yr53week)
+  individual_pred <- cbind(rep(individual_country, nrow(individual_pred)),individual_pred)
+  individual_pred <- as.data.frame(individual_pred)
+  colnames(individual_pred) <- c("Country","week_time","Observation","Prediction","Accurate")
+  
+  score <- round(length(which(individual_pred$Accurate == 1))/nrow(individual_pred),3)
+  
+  result <- NULL
+  result$individual_pred <- individual_pred
+  result$score <- score
+  
+  return(result)
+}
+
 #' Function of caculating the accuracy metric of xgboost model
 compare_accuracy <- function(country_list,flu_data,num_category, train_num_start, train_num_end,nWeek_ahead){
   pred <- NULL
   for (i in 1:length(country_list)){
     individual_pred <- xgboost.model.pred(flu_data,country_list[i],num_category,
-                                          train_num_start, train_num_end,nWeek_ahead)
+                                            train_num_start, train_num_end,nWeek_ahead)
     individual_pred <- cbind(rep(country_list[i], nrow(individual_pred)),individual_pred)
     pred <- rbind(pred,individual_pred)
 
@@ -393,6 +614,31 @@ compare_accuracy <- function(country_list,flu_data,num_category, train_num_start
   
   return(result)
 
+}
+
+compare_accuracy_rolling <- function(country_list,flu_data,num_category, 
+                                     train_num_start, train_num_end,nWeek_ahead,
+                                     ts_year, yr53week){
+  pred <- NULL
+  for (i in 1:length(country_list)){
+    individual_pred <- xgboost.rolling.pred(flu_data,country_list[i],num_category,
+                                          train_num_start, train_num_end,nWeek_ahead,
+                                          ts_year, yr53week)
+    individual_pred <- cbind(rep(country_list[i], nrow(individual_pred)),individual_pred)
+    pred <- rbind(pred,individual_pred)
+    
+  }
+  pred <- as.data.frame(pred)
+  colnames(pred) <- c("Country","week_time","Observation","Prediction","Accurate")
+  
+  score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
+  
+  result <- NULL
+  result$pred <- pred
+  result$score <- score
+  
+  return(result)
+  
 }
 
 #' shows the output of xgboost model 

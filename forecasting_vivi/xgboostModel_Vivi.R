@@ -110,7 +110,6 @@ for (i in 1:length(country_no1718Or10)){
 #' requires data of 5 consective weeks
 #' Exclude countires whose datasets are uneligible to do the 4-week ahead forecast
 
-
 # extract incidence of 41 eligible countries.
 fluWHO.incidence <- extract.incidence.who(fluWHO,
                                           sel_iso_xgb,

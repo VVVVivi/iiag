@@ -1,14 +1,15 @@
 #' XGBoost uses a matrix of input data instead of a data frame,
 #' so the output of gbm_complex should be a matrix of dataset.
 gbm_complex <- function(data, country, num_category,nWeek_ahead,yr53week){
-  yr <- seq(2010, 2019, by = 1)
+  yr <- seq(2010, 2018, by = 1)
+
   initial_data <- c()
   for (i in 1:length(yr)){
     tmp <- extract.incidence.centre(data, country_code = country, yr[i],yr53week)
     initial_data <- rbind(initial_data, tmp)
   }
   initial_data <- as.data.frame(initial_data)
-  
+
   # Divide incidence into 10 categories
   initial_data2 <- cbind(initial_data, cut_interval(initial_data$incidence, n=num_category))
   colnames(initial_data2)[4] <- 'category'
@@ -90,7 +91,7 @@ gbm_complex <- function(data, country, num_category,nWeek_ahead,yr53week){
     tmp <- grep(feb_week[i], rownames(incidence_gbm))
     feb_row <- append(feb_row, tmp)
   }
-  incidence_gbm$month[feb_row] <- "Feburary"
+  incidence_gbm$month[feb_row] <- "February"
   
   mar_row <- c()
   mar_week <- paste("-", 10:14, sep = "")
@@ -189,26 +190,16 @@ gbm_complex <- function(data, country, num_category,nWeek_ahead,yr53week){
     }
   }
   
-  # deal with NA data
-  b <- c()
-  for(i in 1:nrow(incidence_gbm)){
-    if(sum(is.na(incidence_gbm[i,])==TRUE) >= 1){
-      tmp <- i
-      b <- append(b,tmp)
-    }
-    b
-  }
-  
-  incidence_gbm <- incidence_gbm[-b, ]
-  incidence_gbm <- as.data.frame(incidence_gbm)
+  incidence_gbm <- na.omit(incidence_gbm) %>% 
+    as.data.frame()
   incidence_gbm
 }
 
-gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
+gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
   yr <- seq(2010, 2017, by = 1)
   initial_data <- c()
   for (i in 1:length(yr)){
-    tmp <- extract.incidence.who(data, country_code = country, yr[i])
+    tmp <- extract.incidence.who.calender(data, country_code = country, yr[i], yr53week)
     initial_data <- rbind(initial_data, tmp)
   }
   initial_data <- as.data.frame(initial_data)
@@ -395,19 +386,10 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead){
       incidence_gbm$season[i] <- "spring"
     }
   }
-
-  # deal with NA data
-  b <- c()
-  for(i in 1:nrow(incidence_gbm)){
-    if(sum(is.na(incidence_gbm[i,])==TRUE) >= 1){
-      tmp <- i
-      b <- append(b,tmp)
-    }
-    b
-  }
   
-  incidence_gbm <- incidence_gbm[-b, ]
-  incidence_gbm <- as.data.frame(incidence_gbm)
+  incidence_gbm <- na.omit(incidence_gbm) %>% 
+    as.data.frame()
+
   incidence_gbm
 }
 

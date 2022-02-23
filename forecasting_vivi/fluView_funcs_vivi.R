@@ -168,29 +168,43 @@ extract.incidence.fview <- function(fluView_data,
 }
 
 #' check the data availablity in each year
-duration.fview <- function(flu.incidence,country,numWeek_ahead,minYear, maxYear, yr53week){
+duration.fview <- function(flu_incidence,country_list,numWeek_ahead,minYear, maxYear, yr53week){
   year_time <- c(minYear:maxYear)
-  
-  flu_data_complex <- gbm_complex_fview(flu.incidence, country, 10,numWeek_ahead,yr53week)
+  state_year <- NULL
 
-  year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
-  year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
-  all_year <- as.numeric(substr(rownames(flu_data_complex),0,4))
-  
-  country_year <- c()
-  
-  for (i in 1:length(year_time)){
-    if (year_time[i] %in% all_year == TRUE){
-      tmp <- "Yes"
+  for (i in 1:length(country_list)){
+    country <- country_list[i]
+    
+    flu_data_complex <- gbm_complex_fview(flu_incidence, country, 10,numWeek_ahead,yr53week)
+    
+    year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
+    year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
+    all_year <- as.numeric(substr(rownames(flu_data_complex),0,4))
+    
+    country_year <- c()
+    
+    for (i in 1:length(year_time)){
+      if (year_time[i] %in% all_year == TRUE){
+        tmp <- "Yes"
+      }
+      if (year_time[i] %in% all_year == FALSE){
+        tmp <- "No"
+      }
+      country_year <- append(country_year, tmp)
     }
-    if (year_time[i] %in% all_year == FALSE){
-      tmp <- "No"
-    }
-    country_year <- append(country_year, tmp)
+    country_year <- c(country, country_year, year_start, year_end)
+    state_year <- rbind(state_year, country_year)
   }
-  country_year <- c(country, country_year, year_start, year_end)
   
-  country_year
+  # add colnames and rownames for the data frame
+  state_year <- as.data.frame(state_year)
+  colnames(state_year) <- c("State","2010","2011","2012","2013","2014","2015",
+                            "2016","2017","2018","2019","2020", "2021", "start_year","end_year")
+  state_year$end_year <- as.numeric(as.character(state_year$end_year))
+  state_year$start_year <- as.numeric(as.character(state_year$start_year))
+  rownames(state_year) <- c(1:nrow(state_year))
+  
+  state_year
 }
 
 
@@ -233,17 +247,13 @@ adjust.data.size.fview <- function(flu_data,state,category,numWeek_ahead,yr53wee
                                                  intersect(rownames(complex3),rownames(complex4))))
   
   complex <- gbm_complex_fview(flu_data,state,category,numWeek_ahead,yr53week)
-  index <- c()
-  for (i in 1:nrow(complex)){
-    if(rownames(complex)[i] %in% week == FALSE){
-      tmp <- i
-      index <- append(index, tmp)
-    }
-  }
-  if (length(index) == 0){
+  
+  # complex <- ifelse(length(which(rownames(complex) %in% week == FALSE)) == 0, complex,
+  #                    complex[-which(rownames(complex) %in% week == FALSE),])
+  if (length(which(rownames(complex) %in% week == FALSE)) == 0){
     complex <- complex
   }else{
-    complex <- complex[-(index),]
+    complex <- complex[-which(rownames(complex) %in% week == FALSE),]
   }
   
   complex
@@ -307,27 +317,45 @@ xgboost.model.pred.fview <- function(flu_data, state, num_category,
 #' Function that gives individual state forecast result and accuracy score
 
 compare_accuracy_indi_fview <- function(flu_data,
-                                        individual_state, 
+                                        state_list, 
                                         num_category,
                                         train_num_start, 
                                         train_num_end,
                                         nWeek_ahead,
                                         yr53week){
-  state_list <- individual_state
-  individual_pred <- xgboost.model.pred.fview(flu_data,state_list,num_category,
-                                        train_num_start, train_num_end,nWeek_ahead,yr53week)
-  individual_pred <- cbind(rep(individual_state, nrow(individual_pred)),individual_pred) %>%
-    as.data.frame()
-  individual_pred <- as.data.frame(individual_pred)
-  colnames(individual_pred) <- c("State","week_time","Observation","Prediction","Accurate")
+  state_results <- NULL
+  for (i in 1:length(state_list)){
+    individual_pred <- xgboost.model.pred.fview(flu_data,state_list[i],num_category,
+                                                train_num_start, train_num_end,nWeek_ahead,yr53week)
+    individual_pred <- cbind(rep(state_list[i], nrow(individual_pred)),individual_pred) %>%
+      as.data.frame()
+    individual_pred <- as.data.frame(individual_pred)
+    colnames(individual_pred) <- c("State","week_time","Observation","Prediction","Accurate")
+    
+    score <- round(length(which(individual_pred$Accurate == 1))/nrow(individual_pred),3)
+    
+    result <- NULL
+    result$individual_pred <- individual_pred
+    result$score <- score
+    names(result)[1] <- paste0(state_list[i], "_pred")
+    
+    state_results <- append(state_results, result)
+  }
+  # state_list <- individual_state
+  # individual_pred <- xgboost.model.pred.fview(flu_data,state_list,num_category,
+  #                                       train_num_start, train_num_end,nWeek_ahead,yr53week)
+  # individual_pred <- cbind(rep(individual_state, nrow(individual_pred)),individual_pred) %>%
+  #   as.data.frame()
+  # individual_pred <- as.data.frame(individual_pred)
+  # colnames(individual_pred) <- c("State","week_time","Observation","Prediction","Accurate")
+  # 
+  # score <- round(length(which(individual_pred$Accurate == 1))/nrow(individual_pred),3)
+  # 
+  # result <- NULL
+  # result$individual_pred <- individual_pred
+  # result$score <- score
   
-  score <- round(length(which(individual_pred$Accurate == 1))/nrow(individual_pred),3)
-  
-  result <- NULL
-  result$individual_pred <- individual_pred
-  result$score <- score
-  
-  return(result)
+  return(state_results)
 }
 
 accuracy_score_fview <- function(prediction, 
@@ -340,7 +368,7 @@ accuracy_score_fview <- function(prediction,
   }
   
   dataframe <- as.data.frame(dataframe)
-  colnames(dataframe) <- c("State","Accuracy_score")
+  colnames(dataframe) <- c("States","Accuracy_score")
   
   dataframe$Accuracy_score <- round(as.numeric(as.character(dataframe$Accuracy_score)),3)
   

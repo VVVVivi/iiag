@@ -162,7 +162,7 @@ Alabama <- compare_accuracy_indi_fview(fview_incidence2,us_xgb[1],10,1,6,2,2014)
 #' Individual states results, 2018 testing
 indi18_one <- NULL
 for (i in 1:length(us_xgb)){
-  tmp <- compare_accuracy_indi_fview(fview_incidence2,us_xgb[i],10,0,7,1,2014)
+  tmp <- compare_accuracy_indi_fview(fview_incidence2,us_xgb,10,0,7,1,2014)
   indi18_one <- append(indi18_one, tmp)
 }
 
@@ -359,15 +359,15 @@ null_two <- compare_accuracy_null(fview_incidence2,us_xgb,10,2,2014)
 null_three <-compare_accuracy_null(fview_incidence2,us_xgb,10,3,2014)
 null_four <-compare_accuracy_null(fview_incidence2,us_xgb,10,4,2014)
 
-# baseline_score <- c(round((hist_one$score + null_one$score)/2, 3),
-#                     round((hist_two$score + null_two$score)/2, 3),
-#                     round((hist_three$score + null_three$score)/2, 3),
-#                     round((hist_four$score + null_four$score)/2, 3))
+baseline_score <- c(round((hist_one$score + null_one$score)/2, 3),
+                    round((hist_two$score + null_two$score)/2, 3),
+                    round((hist_three$score + null_three$score)/2, 3),
+                    round((hist_four$score + null_four$score)/2, 3))
 
-baseline_score <- c(round(hist_one$score, 3),
-                    round(hist_two$score, 3),
-                    round(hist_three$score, 3),
-                    round(hist_four$score, 3))
+# baseline_score <- c(round(hist_one$score, 3),
+#                     round(hist_two$score, 3),
+#                     round(hist_three$score, 3),
+#                     round(hist_four$score, 3))
 
 #' plot of comparing accuracy beteen different years.
 accuracy_xgb <- cbind(c(1:4),
