@@ -1,3 +1,5 @@
+
+############# Data processing functions ###########
 #' Load WHO FluID data set.
 #' From 2010 week 1 to 2018 week 9 
 load.iiag.data.fluid <- function(datadir="../iiag_data/data_old/") {
@@ -239,23 +241,24 @@ extract.incidence.centre <- function(flu_data,
 }
 
 #' check the data availablity in each year
-duration <- function(flu_incidence, country_list, numWeek_ahead, minYear, maxYear, yr53week){
+duration <- function(flu_data, country_list, numWeek_ahead, 
+                     num_category, minYear, maxYear, yr53week){
   year_time <- c(minYear:maxYear)
-  
   country_year <- NULL
 
   for (i in 1:length(country_list)){
     country <- country_list[i]
-    df_country <- flu_incidence[, which(colnames(flu_incidence) == country)]
+    df_country <- flu_data[, which(colnames(flu_data) == country)]
     sample_size <- length(df_country)
     
-    flu_data_complex <- gbm_complex_WHO(flu_incidence, country, 10, numWeek_ahead, yr53week)
+    flu_data_complex <- adjust.data.size(flu_data, country, num_category, numWeek_ahead, yr53week)
     
     year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
     year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
     all_year <- as.numeric(substr(rownames(flu_data_complex),0,4))
     
     country_year2 <- c()
+    completeness <- c()
 
     for (i in 1:length(year_time)){
       # tmp <- ifelse(year_time[i] %in% all_year == TRUE, 
@@ -277,8 +280,15 @@ duration <- function(flu_incidence, country_list, numWeek_ahead, minYear, maxYea
   country_year <- as.data.frame(country_year)
   colnames(country_year) <- c("Country","2010","2011","2012","2013","2014","2015",
                             "2016","2017", "start_year","end_year")
-  country_year$end_year <- as.numeric(as.character(country_year$end_year))
-  country_year$start_year <- as.numeric(as.character(country_year$start_year))
+  
+  country_year <- country_year %>% 
+    mutate(end_year = as.numeric(as.character(country_year$end_year)),
+           start_year = as.numeric(as.character(country_year$start_year)))
+  
+  for (i in 1:dim(country_year)[1]){
+    country_year$completeness[i] <- ifelse("No" %in% country_year[i,2:9], "No", "Yes")
+  }
+
   rownames(country_year) <- c(1:nrow(country_year))
   
   country_year
@@ -308,7 +318,60 @@ adjust.data.size <- function(flu_data,country,category,numWeek_ahead, yr53week){
   complex
 }
 
+#' check sample size in each year
+check_sample_size <- function(flu_data, country_list, numWeek_ahead, 
+                              num_category, minYear, maxYear, yr53week){
+  year_time <- c(minYear:maxYear)
+  country_year <- NULL
+  
+  for (i in 1:length(country_list)){
+    country <- country_list[i]
+    df_country <- flu_data[, which(colnames(flu_data) == country)]
+    
+    flu_data_complex <- adjust.data.size(flu_data, country, num_category, numWeek_ahead, yr53week)
+    
+    year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
+    year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
+    all_year <- as.numeric(substr(rownames(flu_data_complex),0,4))
+    
+    country_year2 <- c()
+    
+    for (i in 1:length(year_time)){
+      # tmp <- ifelse(year_time[i] %in% all_year == TRUE, 
+      #               ifelse(length(which(is.na(df_country)))/sample_size < 0.5, "Yes", "No"), "No")
+      
+      if (year_time[i] %in% all_year == TRUE){
+        tmp <- length(which(as.numeric(substr(rownames(flu_data_complex),0,4)) == year_time[i]))
+      }
+      if (year_time[i] %in% all_year == FALSE){
+        tmp <- "No"
+      }
+      country_year2 <- append(country_year2, tmp)
+    }
+    country_year2 <- c(country, country_year2, year_start, year_end)
+    country_year <- rbind(country_year, country_year2)
+  }
+  
+  # add colnames and rownames for the data frame
+  country_year <- as.data.frame(country_year)
+  colnames(country_year) <- c("Country","2010","2011","2012","2013","2014","2015",
+                              "2016","2017", "start_year","end_year")
+  
+  country_year <- country_year %>% 
+    mutate(end_year = as.numeric(as.character(country_year$end_year)),
+           start_year = as.numeric(as.character(country_year$start_year)))
+  
+  for (i in 1:dim(country_year)[1]){
+    temp_vec <- as.vector(as.numeric(country_year[i,2:9]) <= 10)
+    country_year$below_10_weeks[i] <- ifelse(TRUE %in% temp_vec, "Yes", "No")
+  }
+  
+  rownames(country_year) <- c(1:nrow(country_year))
+  
+  country_year
+}
 
+############### XGBoost forecasting functions ##############
 #' Convert dataframe into matrix
 xgboost_dat <- function(flu_data_complex, start_year, end_year){
   require(dplyr)
@@ -325,8 +388,11 @@ xgboost_dat <- function(flu_data_complex, start_year, end_year){
   
   # XGBoost requires the classes to be in a numeric format, starting with 0.
   dat_labels <- as.numeric(flu_data_complex$Y_week0)-1
+
   dat <- model.matrix(~.+0, contrasts.arg = lapply(flu_data_complex[,4:5], contrasts, contrasts=FALSE),
-                      data = flu_data_complex[,-1])
+                      data = flu_data_complex[,-c(1:3)])
+  dat <- cbind(flu_data_complex[,c(2:3)], dat)
+  dat <- data.matrix(dat, rownames.force = NA)
   
   if (class(dat_labels) != "numeric"){
     dat_labels <- as.numeric(as.factor(dat_labels))
@@ -355,7 +421,9 @@ rolling_dat <- function(flu_data_complex, start_year, end_year){
   # XGBoost requires the classes to be in a numeric format, starting with 0.
   dat_labels <- as.numeric(flu_data_complex$Y_week0)-1
   dat <- model.matrix(~.+0, contrasts.arg = lapply(flu_data_complex[,4:5], contrasts, contrasts=FALSE),
-                      data = flu_data_complex[,-1])
+                      data = flu_data_complex[,-c(1:3)])
+  dat <- cbind(flu_data_complex[,c(2:3)], dat)
+  dat <- data.matrix(dat, rownames.force = NA)
 
   if (class(dat_labels) != "numeric"){
     dat_labels <- as.numeric(as.factor(dat_labels))
@@ -391,10 +459,68 @@ xgboost_rolling_dat <- function(train_list, test_list, nWeek_ahead, i){
     new_test_labels <- test_labels[i+1] %>% 
       as.numeric()
   }
+
+  # 2-week ahead
   if(nWeek_ahead == 2){
-    
+    rows <- dim(train_matrix)[1]
+    if(i <= 1){
+      new_train_matrix <- train_matrix[1:(rows-(1-i)),] %>% 
+        as.matrix()
+      new_train_labels <- train_labels[1:(rows-(1-i))] %>% 
+        as.numeric()
+    }
+    if(i > 1){
+      new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>% 
+        as.matrix()
+      new_train_labels <- append(train_labels, head(test_labels,i)) %>% 
+        as.numeric()
+    }
+    new_test_matrix <- t(test_matrix[i+1,]) %>% 
+      as.matrix()
+    new_test_labels <- test_labels[i+1] %>% 
+      as.numeric()
   }
-  
+  # 3-week ahead
+  if(nWeek_ahead == 3){
+    rows <- dim(train_matrix)[1]
+    if(i <= 2){
+      new_train_matrix <- train_matrix[1:(rows-(2-i)),] %>% 
+        as.matrix()
+      new_train_labels <- train_labels[1:(rows-(2-i))] %>% 
+        as.numeric()
+    }
+    if(i > 2){
+      new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>% 
+        as.matrix()
+      new_train_labels <- append(train_labels, head(test_labels,i)) %>% 
+        as.numeric()
+    }
+    new_test_matrix <- t(test_matrix[i+1,]) %>% 
+      as.matrix()
+    new_test_labels <- test_labels[i+1] %>% 
+      as.numeric()
+  }
+  # 4-week ahead
+  if(nWeek_ahead == 4){
+    rows <- dim(train_matrix)[1]
+    if(i <= 3){
+      new_train_matrix <- train_matrix[1:(rows-(3-i)),] %>% 
+        as.matrix()
+      new_train_labels <- train_labels[1:(rows-(3-i))] %>% 
+        as.numeric()
+    }
+    if(i > 3){
+      new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>% 
+        as.matrix()
+      new_train_labels <- append(train_labels, head(test_labels,i)) %>% 
+        as.numeric()
+    }
+    new_test_matrix <- t(test_matrix[i+1,]) %>% 
+      as.matrix()
+    new_test_labels <- test_labels[i+1] %>% 
+      as.numeric()
+  }
+
   xgb_train <- xgb.DMatrix(data = new_train_matrix, label = new_train_labels)
   xgb_test <- xgb.DMatrix(data = new_test_matrix, label = new_test_labels)
   
@@ -410,7 +536,8 @@ xgboost_rolling_dat <- function(train_list, test_list, nWeek_ahead, i){
 #' = 2010 + train_num_start +train_num_end
 xgboost.model.pred <- function(flu_data, country, num_category,
                                train_num_start, train_num_end, 
-                               nWeek_ahead, yr53week){
+                               nWeek_ahead, yr53week, nrounds,
+                               params_list){
   # set up dataset for xgboost
   flu_data_complex <- adjust.data.size(flu_data, country, num_category, nWeek_ahead, yr53week)
   
@@ -425,15 +552,16 @@ xgboost.model.pred <- function(flu_data, country, num_category,
   }else{
     end_year_ts <- start_year_ts
   }
-  
+
   xgb_tr <- xgboost_dat(flu_data_complex, start_year_tr, end_year_tr)
   xgb_ts <- xgboost_dat(flu_data_complex, start_year_ts, end_year_ts)
   
   # train the xgboost model
-  params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
-                       subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
+  # params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
+  #                      subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
+
   watchlist <- list(train = xgb_tr, test = xgb_ts)
-  xgb_model <- xgb.train(params = params.train, data = xgb_tr, nrounds = 100, 
+  xgb_model <- xgb.train(params = params_list, data = xgb_tr, nrounds = nrounds, 
                          watchlist = watchlist,verbose = 2, print_every_n = 10,
                          early_stopping_round = 20)
   xgb_pred <- predict(xgb_model, newdata = xgb_ts)
@@ -482,7 +610,8 @@ xgboost.model.pred <- function(flu_data, country, num_category,
 
 xgboost.rolling.pred <- function(flu_data, country, num_category,
                                  train_num_start, train_num_end, 
-                                 nWeek_ahead, ts_year, yr53week){
+                                 nWeek_ahead, yr53week, nrounds,
+                                 params_list){
   # set up dataset for xgboost
   flu_data_complex <- adjust.data.size(flu_data, country, num_category, nWeek_ahead, yr53week)
   
@@ -497,9 +626,14 @@ xgboost.rolling.pred <- function(flu_data, country, num_category,
   }else{
     end_year_ts <- start_year_ts
   }
+
   xgb_tr_list <- rolling_dat(flu_data_complex, start_year_tr, end_year_tr)
   xgb_ts_list <- rolling_dat(flu_data_complex, start_year_ts, end_year_ts)
   
+  if(length(xgb_ts_list[[2]]) == 1){
+    xgb_ts_list[[1]] <- t(as.matrix(xgb_ts_list[[1]]))
+  }
+
   # create a empty to store raw probability output
   pred_mat <- NULL
 
@@ -511,22 +645,22 @@ xgboost.rolling.pred <- function(flu_data, country, num_category,
     # ts_labels <- rownames(ts_rolling)
     # xgb_tr_new <- xgb.DMatrix(data = tr_rolling,label = tr_labels)
     # xgb_ts_new <- xgb.DMatrix(data = ts_rolling,label = ts_labels)
-    xgb_data <- xgboost_rolling_dat(xgb_tr_list, xgb_ts_list, i)
+    xgb_data <- xgboost_rolling_dat(xgb_tr_list, xgb_ts_list, nWeek_ahead, i)
     
     xgb_train <- xgb_data[[1]]
     xgb_test <- xgb_data[[2]]
     
     # train the model
-    params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
-                         subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
+    # params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
+    #                      subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
     watchlist <- list(train = xgb_train, test = xgb_test)
-    xgb_model <- xgb.train(params = params.train, data = xgb_train, nrounds = 100, 
+    
+    xgb_model <- xgb.train(params = params_list, data = xgb_train, nrounds = nrounds, 
                            watchlist = watchlist,verbose = 2, print_every_n = 10,
                            early_stopping_round = 20)
     
     xgb_pred <- predict(xgb_model, newdata = xgb_test)
     pred_mat <- rbind(pred_mat, xgb_pred)
-  
   }
 
   start_year_ts_index <- grep(start_year_ts,rownames(flu_data_complex))[1]
@@ -541,6 +675,7 @@ xgboost.rolling.pred <- function(flu_data, country, num_category,
     cbind(xgb_val_out[,(ncol(xgb_val_out)-1):ncol(xgb_val_out)]) %>%
     data.frame()
   colnames(pred_timeseries) <- c("week_time", "Prediction", "Observation")
+
   pred_timeseries$Observation <- as.numeric(pred_timeseries$Observation)
   pred_timeseries$Prediction <- as.numeric(pred_timeseries$Prediction)
   for (i in 1:nrow(pred_timeseries)){
@@ -553,89 +688,208 @@ xgboost.rolling.pred <- function(flu_data, country, num_category,
   pred_timeseries
 }
 
+############# Accuracy functions #########
+
+#' Function to calculate macro-averaged MAE
+maroMAE <- function(pred, num_category){
+  macroMAE_vec <- c()
+  for (i in 1:num_category){
+    if (i %in% pred$Observation){
+      mat <- pred[which(pred$Observation == i),]
+      macroMAE_tmp <- mae(mat$Observation, mat$Prediction)
+    }else{
+      macroMAE_tmp <- 0 
+    }
+    macroMAE_vec <- c(macroMAE_vec, macroMAE_tmp)
+  }
+  macroMAE <- sum(macroMAE_vec)/num_category
+  
+  return(macroMAE)
+}
+
 
 #' Function that gives individual country forecast result and accuracy score
-compare_accuracy_indi <- function(individual_country, flu_data, num_category,train_num_start, 
-                                  train_num_end,nWeek_ahead){
+compare_accuracy_indi <- function(flu_data, individual_country, num_category,train_num_start, 
+                                  train_num_end,nWeek_ahead, yr53week,nrounds, params_list){
+  require(Metrics)
+  
   country_list <- individual_country
-  individual_pred <- xgboost.model.pred(fluWHO.incidence,country_list,num_category,
-                                        train_num_start, train_num_end,nWeek_ahead)
+
+  individual_pred <- xgboost.model.pred(flu_data,country_list,num_category,
+                                        train_num_start, train_num_end,nWeek_ahead, 
+                                        yr53week, nrounds, params_list)
   individual_pred <- cbind(rep(individual_country, nrow(individual_pred)),individual_pred)
   individual_pred <- as.data.frame(individual_pred)
-  colnames(individual_pred) <- c("Country","week_time","Observation","Prediction","Accurate")
+  colnames(individual_pred) <- c("Country","week_time","Prediction", "Observation","Accuracy")
   
-  score <- round(length(which(individual_pred$Accurate == 1))/nrow(individual_pred),3)
+  accuracy <- round(length(which(individual_pred$Accuracy == 1))/nrow(individual_pred),3)
+  MZE <- 1- accuracy
+  MAE <- mae(individual_pred$Observation, individual_pred$Prediction)
   
-  result <- NULL
-  result$individual_pred <- individual_pred
-  result$score <- score
+  # macro_averaged MAE
+  macroMAE_vec <- c()
+  for (i in 1:num_category){
+    if (i %in% individual_pred$Observation){
+      mat <- individual_pred[which(individual_pred$Observation == i),]
+      macroMAE_tmp <- mae(mat$Observation, mat$Prediction)
+    }else{
+      macroMAE_tmp <- 0 
+    }
+    macroMAE_vec <- c(macroMAE_vec, macroMAE_tmp)
+  }
+  macroMAE <- sum(macroMAE_vec)/num_category
+  
+  result <- list(individual_pred = individual_pred, accuracy = accuracy, 
+                 MZE = MZE, MAE = MAE, macroMAE = macroMAE)
   
   return(result)
 } 
 
 
-compare_accuracy_indi_rolling <- function(individual_country, flu_data, num_category,train_num_start, 
-                                  train_num_end, nWeek_ahead, ts_year, yr53week){
+compare_accuracy_indi_rolling <- function(flu_data, individual_country, num_category,train_num_start, 
+                                  train_num_end, nWeek_ahead, yr53week, 
+                                  nrounds, params_list){
   country_list <- individual_country
   individual_pred <- xgboost.rolling.pred(flu_data,country_list,num_category,
                                           train_num_start, train_num_end,nWeek_ahead,
-                                          ts_year, yr53week)
-  individual_pred <- cbind(rep(individual_country, nrow(individual_pred)),individual_pred)
-  individual_pred <- as.data.frame(individual_pred)
-  colnames(individual_pred) <- c("Country","week_time","Observation","Prediction","Accurate")
+                                          yr53week, nrounds, params_list)
+  individual_pred <- cbind(rep(individual_country, nrow(individual_pred)),individual_pred) %>% 
+    as.data.frame()
+  colnames(individual_pred) <- c("Country","week_time","Prediction","Observation", "Accuracy")
   
-  score <- round(length(which(individual_pred$Accurate == 1))/nrow(individual_pred),3)
+  accuracy <- round(length(which(individual_pred$Accuracy == 1))/nrow(individual_pred),3)
+  MZE <- 1- accuracy
+  MAE <- mae(individual_pred$Observation, individual_pred$Prediction)
   
-  result <- NULL
-  result$individual_pred <- individual_pred
-  result$score <- score
+  # macro_averaged MAE
+  macroMAE_vec <- c()
+  for (i in 1:num_category){
+    if (i %in% individual_pred$Observation){
+      mat <- individual_pred[which(individual_pred$Observation == i),]
+      macroMAE_tmp <- mae(mat$Observation, mat$Prediction)
+    }else{
+      macroMAE_tmp <- 0 
+    }
+    macroMAE_vec <- c(macroMAE_vec, macroMAE_tmp)
+  }
+  macroMAE <- sum(macroMAE_vec)/num_category
+  
+  result <- list(individual_pred = individual_pred, accuracy = accuracy, 
+                 MZE = MZE, MAE = MAE, macroMAE = macroMAE)
   
   return(result)
 }
 
-#' Function of caculating the accuracy metric of xgboost model
-compare_accuracy <- function(country_list,flu_data,num_category, train_num_start, train_num_end,nWeek_ahead){
+#' Function of calculating the accuracy metric of xgboost model
+compare_accuracy <- function(flu_data, country_list,num_category, train_num_start, train_num_end,
+                             nWeek_ahead, yr53week, nrounds, params_list){
   pred <- NULL
   for (i in 1:length(country_list)){
     individual_pred <- xgboost.model.pred(flu_data,country_list[i],num_category,
-                                            train_num_start, train_num_end,nWeek_ahead)
+                                          train_num_start, train_num_end,
+                                          nWeek_ahead, yr53week, nrounds, params_list)
     individual_pred <- cbind(rep(country_list[i], nrow(individual_pred)),individual_pred)
     pred <- rbind(pred,individual_pred)
-
+    
+    print(paste0(country_list[i], " finished running."))
   }
   pred <- as.data.frame(pred)
-  colnames(pred) <- c("Country","week_time","Observation","Prediction","Accurate")
+  colnames(pred) <- c("Country","week_time", "Prediction","Observation", "Accuracy")
   
-  score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
-
-  result <- NULL
-  result$pred <- pred
-  result$score <- score
+  indi_acc <- NULL
+  for (i in 1:length(country_list)){
+    temp <- pred[which(pred$Country==country_list[i]),]
+    acc.temp <- sum(temp$Accuracy==1)/dim(temp)[1]
+    mze.temp <- 1-acc.temp
+    mae.temp <- mae(temp$Observation, temp$Prediction)
+    maroMAE.temp <- maroMAE(temp, 10)
+    
+    indi_acc <- rbind(indi_acc, c(country_list[i], acc.temp,mze.temp, mae.temp, maroMAE.temp))
+  }
   
+  indi_acc <- indi_acc %>%
+    as.data.frame() %>%
+    rename(Country = V1, accuracy = V2, MZE = V3, MAE = V4, macroMAE = V5) %>% 
+    mutate(accuracy = as.numeric(accuracy), MZE = as.numeric(MZE),
+           MAE = as.numeric(MAE),  macroMAE = as.numeric(macroMAE))
+  
+  # accuracy <- round(length(which(pred$Accuracy == 1))/nrow(pred),3)
+  # MZE <- 1- accuracy
+  # MAE <- mae(pred$Observation, pred$Prediction)
+  # 
+  # # macro_averaged MAE
+  # macroMAE_vec <- c()
+  # for (i in 1:num_category){
+  #   if (i %in% pred$Observation){
+  #     mat <- pred[which(pred$Observation == i),]
+  #     macroMAE_tmp <- mae(mat$Observation, mat$Prediction)
+  #   }else{
+  #     macroMAE_tmp <- 0 
+  #   }
+  #   macroMAE_vec <- c(macroMAE_vec, macroMAE_tmp)
+  # }
+  # macroMAE <- sum(macroMAE_vec)/num_category
+  
+  result <- list(pred = pred, accuracy = mean(indi_acc$accuracy), 
+                 MZE = mean(indi_acc$MZE), MAE = mean(indi_acc$MAE), 
+                 macroMAE = mean(indi_acc$macroMAE))
   return(result)
 
 }
 
-compare_accuracy_rolling <- function(country_list,flu_data,num_category, 
+#' Calculate Mean Zero-one accuracy and error
+compare_accuracy_rolling <- function(flu_data, country_list,num_category, 
                                      train_num_start, train_num_end,nWeek_ahead,
-                                     ts_year, yr53week){
+                                     yr53week,nrounds, params_list){
   pred <- NULL
   for (i in 1:length(country_list)){
     individual_pred <- xgboost.rolling.pred(flu_data,country_list[i],num_category,
                                           train_num_start, train_num_end,nWeek_ahead,
-                                          ts_year, yr53week)
+                                          yr53week, nrounds, params_list)
     individual_pred <- cbind(rep(country_list[i], nrow(individual_pred)),individual_pred)
     pred <- rbind(pred,individual_pred)
-    
+    print(paste0(country_list[i], " finished running."))
   }
   pred <- as.data.frame(pred)
-  colnames(pred) <- c("Country","week_time","Observation","Prediction","Accurate")
+  colnames(pred) <- c("Country","week_time","Prediction", "Observation","Accuracy")
   
-  score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
+  indi_acc <- NULL
+  for (i in 1:length(country_list)){
+    temp <- pred[which(pred$Country==country_list[i]),]
+    acc.temp <- sum(temp$Accuracy==1)/dim(temp)[1]
+    mze.temp <- 1-acc.temp
+    mae.temp <- mae(temp$Observation, temp$Prediction)
+    maroMAE.temp <- maroMAE(temp, 10)
+    
+    indi_acc <- rbind(indi_acc, c(country_list[i], acc.temp,mze.temp, mae.temp, maroMAE.temp))
+  }
+
+  indi_acc <- indi_acc %>%
+    as.data.frame() %>%
+    rename(Country = V1, accuracy = V2, MZE = V3, MAE = V4, macroMAE = V5) %>% 
+    mutate(accuracy = as.numeric(accuracy), MZE = as.numeric(MZE),
+           MAE = as.numeric(MAE),  macroMAE = as.numeric(macroMAE))
   
-  result <- NULL
-  result$pred <- pred
-  result$score <- score
+  # accuracy <- round(length(which(pred$Accuracy == 1))/nrow(pred),3)
+  # MZE <- 1- accuracy 
+  # MAE <- mae(pred$Observation, pred$Prediction)
+  # 
+  # # macro_averaged MAE
+  # macroMAE_vec <- c()
+  # for (i in 1:num_category){
+  #   if (i %in% pred$Observation){
+  #     mat <- pred[which(pred$Observation == i),]
+  #     macroMAE_tmp <- mae(mat$Observation, mat$Prediction)
+  #   }else{
+  #     macroMAE_tmp <- 0 
+  #   }
+  #   macroMAE_vec <- c(macroMAE_vec, macroMAE_tmp)
+  # }
+  # macroMAE <- sum(macroMAE_vec)/num_category
+  
+  result <- list(pred = pred, accuracy = mean(indi_acc$accuracy), 
+                 MZE = mean(indi_acc$MZE), MAE = mean(indi_acc$MAE), 
+                 macroMAE = mean(indi_acc$macroMAE))
   
   return(result)
   
@@ -695,7 +949,11 @@ xgboost.model.pred.output <- function(flu_data_complex, start_year_ts,
 
 #### Heat plot for xgboost model ####
 freq_table <- function(prediction, row_col){
-  accuracy <- prediction[,2:3]
+  require(dplyr)
+  
+  accuracy <- prediction %>% 
+    dplyr::select(Observation, Prediction)
+  
   for (i in 1:nrow(accuracy)){
     if (accuracy[i,1]==accuracy[i,2]){
       accuracy$accurate[i] <- 1
@@ -704,6 +962,7 @@ freq_table <- function(prediction, row_col){
       accuracy$accurate[i] <- 0
     }
   }
+
   per <- gtools::permutations(row_col,2,repeats.allowed = TRUE)
   freq <- cbind(per, rep(0, nrow(per)))
   freq <- as.data.frame(freq)
@@ -724,6 +983,8 @@ freq_table <- function(prediction, row_col){
   }
   freq
   
+  # return(freq)
+
   squared_freq <- matrix(nrow = row_col, ncol = row_col)
   n <- 1
   while(n <= nrow(freq)){
@@ -741,6 +1002,44 @@ freq_table <- function(prediction, row_col){
                               'predicted_6','predicted_7','predicted_8','predicted_9','predicted_10')
   squared_freq
 }
+
+heat_plot <- function(frequencyTable){
+  require("RColorBrewer")
+  require("raster")
+  require("rasterVis")
+  
+  frequencyMatrix <- as.matrix(frequencyTable)
+  colnames(frequencyMatrix) <- c(1:10)
+  rownames(frequencyMatrix) <- c(1:10)
+  # my.at will be changed according to the number of data points
+  if(max(frequencyTable) <= 100){
+    my.at <- c(0,1,2,5,10,20,30,50,70,100)
+  }
+  if(max(frequencyTable) > 500){
+    my.at <- c(0,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750)
+  }
+  if(max(frequencyTable) > 100 && max(frequencyTable) < 500){
+    my.at <- c(0,10,30,50,100,150,250,300,350,400,450,499)
+  }
+  my.brks <- seq(0, max(frequencyMatrix, na.rm = TRUE), length.out = length(my.at))
+  blues <- brewer.pal(9, "Blues")
+  reds <-  brewer.pal(9, "Reds")
+  mapTheme <- rasterTheme(region= c(blues,reds))
+  myColorkey <- list(at=my.brks, labels=list(at=my.brks, labels=my.at), space="right")
+  myPanel <- function(x, y, z,...) {
+    panel.levelplot(x,y,z,...)
+    for (i in 1:nrow(frequencyMatrix)){
+      for (j in 1:ncol(frequencyMatrix)){
+        panel.text(x=i, y=j, frequencyMatrix[cbind(j,i)])
+      }
+    }
+  }
+  # title <- paste(countryName,"accuracy score:", score, collapse = " ")
+  # country <- countryName
+  levelplot(t(frequencyMatrix), xlab = 'Obeserved', ylab = 'Forecast', main = title,
+            panel = myPanel, par.settings=mapTheme, at=my.at, colorkey=myColorkey, margin=F)
+}
+
 
 heat_plot <- function(frequencyTable, countryName, score){
   require("RColorBrewer")
@@ -773,12 +1072,13 @@ heat_plot <- function(frequencyTable, countryName, score){
       }
     }
   }
-  title <- paste(countryName,"accuracy score:", score, collapse = " ")
-  country <- countryName 
+  # title <- paste(countryName,"accuracy score:", score, collapse = " ")
+  # country <- countryName
   levelplot(t(frequencyMatrix), xlab = 'Obeserved', ylab = 'Forecast', main = title,
             panel = myPanel, par.settings=mapTheme, at=my.at, colorkey=myColorkey, margin=F)
 }
 
+############ baseline models ##############
 #### historical average model ####
 #' Historical avarage model to generate category predictions
 # hist_dataform <- function(flu_data){
@@ -821,31 +1121,53 @@ heat_plot <- function(frequencyTable, countryName, score){
 # hist
 # }
 
-hist_average <- function(flu_data, country,num_category, numWeek_ahead){
+hist_average <- function(flu_data, country, num_category, train_num_start,
+                         train_num_end, numWeek_ahead, yr53week){
   
-  flu_data_complex <- adjust.data.size(flu_data,country,num_category,numWeek_ahead)
+  flu_data_complex <- adjust.data.size(flu_data,country, category = num_category,
+                                       numWeek_ahead, yr53week)
   
   flu_data_complex <- cbind(substr(rownames(flu_data_complex), 0,4), 
                             substr(rownames(flu_data_complex),6,7),
                             flu_data_complex[,1:3]) %>% as.data.frame()
+  
   colnames(flu_data_complex) <- c("Year","Week","Y_week0","week_1","week_2")
   flu_data_complex$Week <- as.numeric(flu_data_complex$Week)
+
+  year_start <- as.numeric(min(flu_data_complex$Year))
+  year_end <- as.numeric(max(flu_data_complex$Year))
+  start_year_tr <- year_start + train_num_start
+  end_year_tr <-  start_year_tr + train_num_end
+  start_year_ts <- end_year_tr + 1
   
-  pred <- matrix(NA,nrow = nrow(flu_data_complex), ncol = numWeek_ahead)
+  if ((start_year_ts == 2017 && year_end == 2018) == TRUE ){
+    end_year_ts <- year_end
+  }else{
+    end_year_ts <- start_year_ts
+  }
+  
+  # flu_data_complex <- flu_data_complex[-which(flu_data_complex$Year==2015&flu_data_complex$Week==53), ]
+  
+  flu_train <- flu_data_complex %>%
+    filter(Year %in% c(start_year_tr:end_year_tr))
+  flu_test <- flu_data_complex %>%
+    filter(Year %in% c(start_year_ts, end_year_ts))
+
+  pred <- matrix(NA,nrow = nrow(flu_test), ncol = numWeek_ahead)
   
   if (numWeek_ahead == 1){
-    for (i in 1:nrow(flu_data_complex)){
-      yr <- flu_data_complex$Year[i]
-      week <- flu_data_complex$Week[i]-1
-      obsTem <- flu_data_complex[which(flu_data_complex$Week==week),]
+    for (i in 1:nrow(flu_test)){
+      yr <- flu_test$Year[i]
+      week <- flu_test$Week[i]-1
+      obsTem <- flu_train[which(flu_train$Week==week),]
       obs <- obsTem$Y_week0[which(obsTem$Year != yr)]
-      pred[i,] <- which.max(tabulate(obs))
+      pred[i,] <- which.max(tabulate(obs, nbins = 10))
     }
-    
-    pred <- cbind(rownames(flu_data_complex),pred,flu_data_complex$Y_week0) %>% 
+
+    pred <- cbind(rownames(flu_test),pred,flu_test$Y_week0) %>% 
       as.data.frame()
-    colnames(pred) <- c("Week_time","OneWeek_ahead", "Observation")
-    
+    colnames(pred) <- c("week_time","OneWeek_ahead", "Observation")
+
     # accuracy
     for (i in 1:nrow(pred)){
       if (is.na(pred[i,2])==TRUE || is.na(pred[i,3])==TRUE){
@@ -861,16 +1183,24 @@ hist_average <- function(flu_data, country,num_category, numWeek_ahead){
   }
   
   if (numWeek_ahead == 2){
-    for (i in 1:nrow(flu_data_complex)){
-      yr <- flu_data_complex$Year[i]
-      week <- flu_data_complex$Week[i]-2
-      obsTem <- flu_data_complex[which(flu_data_complex$Week==week),]
+    for (i in 1:nrow(flu_test)){
+      yr <- flu_test$Year[i]
+      week <- flu_test$Week[i]-2
+      obsTem <- flu_train[which(flu_train$Week==week),]
       obs <- obsTem$Y_week0[which(obsTem$Year != yr)]
-      pred[i,] <- which.max(tabulate(obs))
+      pred[i,] <- which.max(tabulate(obs, nbins = 10))
+      
+      # yr <- flu_data_complex$Year[i]
+      # week <- flu_data_complex$Week[i]-2
+      # obsTem <- flu_data_complex[which(flu_data_complex$Week==week),]
+      # obs <- obsTem$Y_week0[which(obsTem$Year != yr)]
+      # pred[i,] <- which.max(tabulate(obs))
     }
-    pred <- cbind(rownames(flu_data_complex),pred,flu_data_complex$Y_week0) %>% 
+    pred <- cbind(rownames(flu_test),pred,flu_test$Y_week0) %>% 
       as.data.frame()
-    colnames(pred) <- c("Week_time","OneWeek_ahead", "TwoWeek_ahead","Observation")
+    # pred <- cbind(rownames(flu_data_complex),pred,flu_data_complex$Y_week0) %>% 
+    #   as.data.frame()
+    colnames(pred) <- c("week_time","OneWeek_ahead", "TwoWeek_ahead","Observation")
     
     # accuracy
     for (i in 1:nrow(pred)){
@@ -887,16 +1217,16 @@ hist_average <- function(flu_data, country,num_category, numWeek_ahead){
   }
   
   if (numWeek_ahead == 3){
-    for (i in 1:nrow(flu_data_complex)){
-      yr <- flu_data_complex$Year[i]
-      week <- flu_data_complex$Week[i]-3
-      obsTem <- flu_data_complex[which(flu_data_complex$Week==week),]
+    for (i in 1:nrow(flu_test)){
+      yr <- flu_test$Year[i]
+      week <- flu_test$Week[i]-3
+      obsTem <- flu_train[which(flu_train$Week==week),]
       obs <- obsTem$Y_week0[which(obsTem$Year != yr)]
-      pred[i,] <- which.max(tabulate(obs))
+      pred[i,] <- which.max(tabulate(obs, nbins = 10))
     }
-    pred <- cbind(rownames(flu_data_complex),pred,flu_data_complex$Y_week0) %>% 
+    pred <- cbind(rownames(flu_test),pred,flu_test$Y_week0) %>% 
       as.data.frame()
-    colnames(pred) <- c("Week_time","OneWeek_ahead", "TwoWeek_ahead","ThreeWeek_ahead","Observation")
+    colnames(pred) <- c("week_time","OneWeek_ahead", "TwoWeek_ahead","ThreeWeek_ahead","Observation")
     
     # accuracy
     for (i in 1:nrow(pred)){
@@ -913,16 +1243,16 @@ hist_average <- function(flu_data, country,num_category, numWeek_ahead){
   }
   
   if (numWeek_ahead == 4){
-    for (i in 1:nrow(flu_data_complex)){
-      yr <- flu_data_complex$Year[i]
-      week <- flu_data_complex$Week[i]-4
-      obsTem <- flu_data_complex[which(flu_data_complex$Week==week),]
+    for (i in 1:nrow(flu_test)){
+      yr <- flu_test$Year[i]
+      week <- flu_test$Week[i]-4
+      obsTem <- flu_train[which(flu_train$Week==week),]
       obs <- obsTem$Y_week0[which(obsTem$Year != yr)]
-      pred[i,] <- which.max(tabulate(obs))
+      pred[i,] <- which.max(tabulate(obs, nbins = 10))
     }
-    pred <- cbind(rownames(flu_data_complex),pred,flu_data_complex$Y_week0) %>% 
+    pred <- cbind(rownames(flu_test),pred,flu_test$Y_week0) %>% 
       as.data.frame()
-    colnames(pred) <- c("Week_time","OneWeek_ahead", "TwoWeek_ahead","ThreeWeek_ahead","FourWeek_ahead","Observation")
+    colnames(pred) <- c("week_time","OneWeek_ahead", "TwoWeek_ahead","ThreeWeek_ahead","FourWeek_ahead","Observation")
     
     # accuracy
     for (i in 1:nrow(pred)){
@@ -936,34 +1266,101 @@ hist_average <- function(flu_data, country,num_category, numWeek_ahead){
         }
       }
     }
+    # MAE <- mae(pred$Observation, pred$FourWeek_ahead)
   }
   
-  score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
+  # score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
+  # 
+  # result <- NULL
+  # result$pred <- pred
+  # result$Accuracy <- score
+  # result
   
-  result <- NULL
-  result$pred <- pred
-  result$score <- score
-  
-  return(result)
+  return(pred)
 }
 
 # compare 1,2,3,4-week ahead forecast accuracy
-compare_accuracy_hist <- function(flu_data,country,num_category,numWeek_ahead){
+compare_accuracy_hist <- function(flu_data,country,num_category,train_num_start,
+                                  train_num_end, numWeek_ahead, yr53week){
+  require(dplyr)
+  
   pred <- NULL
   
   for (i in 1:length(country)){
-    individual_pred <- hist_average(flu_data,country[i],num_category,numWeek_ahead)
+    individual_pred <- hist_average(flu_data,country[i],num_category, train_num_start,
+                                    train_num_end,numWeek_ahead, yr53week)
     individual_pred <- cbind(rep(country[i], nrow(individual_pred)),individual_pred)
     pred <- rbind(pred,individual_pred)
   }
   pred <- as.data.frame(pred)
   colnames(pred) <- c("Country",colnames(pred)[2:ncol(pred)])
+
+  if(numWeek_ahead == 1){
+    pred_acc <- pred %>% 
+      dplyr::select(Country, OneWeek_ahead, Observation, Accurate) %>% 
+      rename(Prediction = OneWeek_ahead)%>% 
+      mutate(Prediction = as.numeric(Prediction),
+             Observation = as.numeric(Observation))
+  }
+  if(numWeek_ahead == 2){
+    pred_acc <- pred %>% 
+      dplyr::select(Country, TwoWeek_ahead, Observation, Accurate) %>% 
+      rename(Prediction = TwoWeek_ahead)%>% 
+      mutate(Prediction = as.numeric(Prediction),
+             Observation = as.numeric(Observation))
+  }
+  if(numWeek_ahead == 3){
+    pred_acc <- pred %>% 
+      dplyr::select(Country, ThreeWeek_ahead, Observation, Accurate) %>% 
+      rename(Prediction = ThreeWeek_ahead)%>% 
+      mutate(Prediction = as.numeric(Prediction),
+             Observation = as.numeric(Observation))
+  }
+  if(numWeek_ahead == 4){
+    pred_acc <- pred %>% 
+      dplyr::select(Country, FourWeek_ahead, Observation, Accurate) %>% 
+      rename(Prediction = FourWeek_ahead) %>% 
+      mutate(Prediction = as.numeric(Prediction),
+             Observation = as.numeric(Observation))
+  }
   
-  score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
+  indi_acc <- NULL
+  for (i in 1:length(country)){
+    temp <- pred_acc[which(pred_acc$Country==country[i]),]
+    acc.temp <- sum(temp$Accurate==1)/dim(temp)[1]
+    mze.temp <- 1-acc.temp
+    mae.temp <- mae(temp$Observation, temp$Prediction)
+    maroMAE.temp <- maroMAE(temp, 10)
+    
+    indi_acc <- rbind(indi_acc, c(country[i], acc.temp,mze.temp, mae.temp, maroMAE.temp))
+  }
   
-  result <- NULL
-  result$pred <- pred
-  result$score <- score
+  indi_acc <- indi_acc %>%
+    as.data.frame() %>%
+    rename(Country = V1, accuracy = V2, MZE = V3, MAE = V4, macroMAE = V5) %>% 
+    mutate(accuracy = as.numeric(accuracy), MZE = as.numeric(MZE),
+           MAE = as.numeric(MAE),  macroMAE = as.numeric(macroMAE))
+  
+  # accuracy <- round(length(which(pred_acc$Accurate == 1))/nrow(pred),3)
+  # MZE <- 1- accuracy
+  # MAE <- mae(pred_acc$Observation, pred_acc$Prediction)
+  # 
+  # # macro_averaged MAE
+  # macroMAE_vec <- c()
+  # for (i in 1:num_category){
+  #   if (i %in% pred_acc$Observation){
+  #     mat <- pred_acc[which(pred_acc$Observation == i),]
+  #     macroMAE_tmp <- mae(mat$Observation, mat$Prediction)
+  #   }else{
+  #     macroMAE_tmp <- 0 
+  #   }
+  #   macroMAE_vec <- c(macroMAE_vec, macroMAE_tmp)
+  # }
+  # macroMAE <- sum(macroMAE_vec)/num_category
+  
+  result <- list(pred = pred, accuracy = mean(indi_acc$accuracy), 
+                 MZE = mean(indi_acc$MZE), MAE = mean(indi_acc$MAE), 
+                 macroMAE = mean(indi_acc$macroMAE))
   
   return(result)
 }
@@ -971,10 +1368,10 @@ compare_accuracy_hist <- function(flu_data,country,num_category,numWeek_ahead){
 #### repeat model ####
 
 #'
-repeat_model <- function(flu_data,country, num_category, numWeek_ahead){
+repeat_model <- function(flu_data,country, num_category, numWeek_ahead, yr53week){
   require(dplyr)
   
-  flu_data_complex <- adjust.data.size(flu_data,country,num_category,numWeek_ahead)                                
+  flu_data_complex <- adjust.data.size(flu_data,country,num_category,numWeek_ahead, yr53week)                                
   # prediction of the week is the same as the last week
   if(numWeek_ahead == 1){
     pred <- c()
@@ -984,7 +1381,7 @@ repeat_model <- function(flu_data,country, num_category, numWeek_ahead){
     }
     pred <- cbind(rownames(flu_data_complex),pred, flu_data_complex$Y_week0) %>% 
       as.data.frame()
-    colnames(pred) <- c("Week_time","Prediction","Observation")
+    colnames(pred) <- c("week_time","OneWeek_ahead","Observation")
     
     # accuracy
     for (i in 1:nrow(pred)){
@@ -1008,7 +1405,7 @@ repeat_model <- function(flu_data,country, num_category, numWeek_ahead){
     
     pred <- cbind(rownames(flu_data_complex),pred,flu_data_complex$Y_week0) %>% 
       as.data.frame()
-    colnames(pred) <- c('Week_time','OneWeek_ahead','TwoWeek_ahead', "Observation")
+    colnames(pred) <- c('week_time','OneWeek_ahead','TwoWeek_ahead', "Observation")
     
     # accuracy
     for (i in 1:nrow(pred)){
@@ -1032,7 +1429,7 @@ repeat_model <- function(flu_data,country, num_category, numWeek_ahead){
     
     pred <- cbind(rownames(flu_data_complex),pred,flu_data_complex$Y_week0) %>% 
       as.data.frame()
-    colnames(pred) <- c("Week_time","OneWeek_ahead","TwoWeek_ahead","ThreeWeek_ahead", "Observation")
+    colnames(pred) <- c("week_time","OneWeek_ahead","TwoWeek_ahead","ThreeWeek_ahead", "Observation")
     
     # accuracy
     for (i in 1:nrow(pred)){
@@ -1056,7 +1453,7 @@ repeat_model <- function(flu_data,country, num_category, numWeek_ahead){
     
     pred <- cbind(rownames(flu_data_complex),pred,flu_data_complex$Y_week0) %>% 
       as.data.frame()
-    colnames(pred) <- c("Week_time","OneWeek_ahead","TwoWeek_ahead","ThreeWeek_ahead","FourWeek_ahead", "Observation")
+    colnames(pred) <- c("week_time","OneWeek_ahead","TwoWeek_ahead","ThreeWeek_ahead","FourWeek_ahead", "Observation")
     # accuracy
     for (i in 1:nrow(pred)){
       if (is.na(pred[i,5])==TRUE || is.na(pred[i,6])==TRUE){
@@ -1071,37 +1468,126 @@ repeat_model <- function(flu_data,country, num_category, numWeek_ahead){
     }
   }
   
-  score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
+  # score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
+  # 
+  # result <- NULL
+  # result$pred <- pred
+  # result$score <- score
   
-  result <- NULL
-  result$pred <- pred
-  result$score <- score
-  
-  return(result)
+  return(pred)
   
 }
 
 #' calculate the accuracy of repeat model
-compare_accuracy_repeat <- function(flu_data,country,num_category,numWeek_ahead){
+compare_accuracy_repeat <- function(flu_data,country,num_category,
+                                    numWeek_ahead, test_year, yr53week){
   pred <- NULL
   
   for (i in 1:length(country)){
-    individual_pred <- repeat_model(flu_data,country[i],num_category, numWeek_ahead)
+    individual_pred <- repeat_model(flu_data,country[i],num_category, numWeek_ahead, yr53week)
     individual_pred <- cbind(rep(country[i], nrow(individual_pred)),individual_pred)
     pred <- rbind(pred,individual_pred)
   }
   pred <- as.data.frame(pred)
   colnames(pred) <- c("Country",colnames(pred)[2:ncol(pred)])
+
+  if(numWeek_ahead == 1){
+    pred_acc <- pred %>% 
+      dplyr::select(Country, week_time, OneWeek_ahead, Observation, Accurate) %>% 
+      rename(Prediction = OneWeek_ahead)%>% 
+      mutate(Prediction = as.numeric(Prediction),
+             Observation = as.numeric(Observation))
+  }
+  if(numWeek_ahead == 2){
+    pred_acc <- pred %>% 
+      dplyr::select(Country,week_time, TwoWeek_ahead, Observation, Accurate) %>% 
+      rename(Prediction = TwoWeek_ahead)%>% 
+      mutate(Prediction = as.numeric(Prediction),
+             Observation = as.numeric(Observation))
+  }
+  if(numWeek_ahead == 3){
+    pred_acc <- pred %>% 
+      dplyr::select(Country, week_time, ThreeWeek_ahead, Observation, Accurate) %>% 
+      rename(Prediction = ThreeWeek_ahead)%>% 
+      mutate(Prediction = as.numeric(Prediction),
+             Observation = as.numeric(Observation))
+  }
+  if(numWeek_ahead == 4){
+    pred_acc <- pred %>% 
+      dplyr::select(Country, week_time, FourWeek_ahead, Observation, Accurate) %>% 
+      rename(Prediction = FourWeek_ahead)%>% 
+      mutate(Prediction = as.numeric(Prediction),
+             Observation = as.numeric(Observation))
+  }
   
-  score <- round(length(which(pred$Accurate == 1))/nrow(pred),3)
+  pred_acc <- pred_acc %>% 
+    mutate(Year = substr(week_time,0,4),
+           Week = substr(week_time,6,7)) %>%
+    filter(Year == test_year)
+
+  indi_acc <- NULL
+  for (i in 1:length(country)){
+    temp <- pred_acc[which(pred_acc$Country==country[i]),]
+    acc.temp <- sum(temp$Accurate==1)/dim(temp)[1]
+    mze.temp <- 1-acc.temp
+    mae.temp <- mae(temp$Observation, temp$Prediction)
+    maroMAE.temp <- maroMAE(temp, 10)
+    
+    indi_acc <- rbind(indi_acc, c(country[i], acc.temp,mze.temp, mae.temp, maroMAE.temp))
+  }
   
-  result <- NULL
-  result$pred <- pred
-  result$score <- score
+  indi_acc <- indi_acc %>%
+    as.data.frame() %>%
+    rename(Country = V1, accuracy = V2, MZE = V3, MAE = V4, macroMAE = V5) %>% 
+    mutate(accuracy = as.numeric(accuracy), MZE = as.numeric(MZE),
+           MAE = as.numeric(MAE),  macroMAE = as.numeric(macroMAE))
   
+  # accuracy <- round(length(which(pred_acc$Accurate == 1))/nrow(pred),3)
+  # MZE <- 1- accuracy
+  # MAE <- mae(pred_acc$Observation, pred_acc$Prediction)
+  # 
+  # # macro_averaged MAE
+  # macroMAE_vec <- c()
+  # for (i in 1:num_category){
+  #   if (i %in% pred_acc$Observation){
+  #     mat <- pred_acc[which(pred_acc$Observation == i),]
+  #     macroMAE_tmp <- mae(mat$Observation, mat$Prediction)
+  #   }else{
+  #     macroMAE_tmp <- 0 
+  #   }
+  #   macroMAE_vec <- c(macroMAE_vec, macroMAE_tmp)
+  # }
+  # macroMAE <- sum(macroMAE_vec)/num_category
+  # 
+  # result <- list(pred = pred, accuracy = accuracy, 
+  #                MZE = MZE, MAE = MAE, macroMAE = macroMAE)
+  pred <- pred %>% 
+    mutate(Year = substr(week_time,0,4),
+           Week = substr(week_time,6,7)) %>%
+    filter(Year == test_year) %>% 
+    dplyr::select(-Year, -Week)
+  
+  result <- list(pred = pred, accuracy = mean(indi_acc$accuracy), 
+                 MZE = mean(indi_acc$MZE), MAE = mean(indi_acc$MAE), 
+                 macroMAE = mean(indi_acc$macroMAE))
   return(result)
-  
 }
+
+######## 95% CI ########
+est.CI <- function(estimate){
+  est.mean <- mean(estimate)
+  est.sd <- sd(estimate)
+  n <- length(estimate)
+  error <- qt(0.975,df=n-1)*est.sd/sqrt(n)
+
+  ub <- est.mean + error
+  lb <- est.mean - error
+  
+  CI <- c(lb, ub)
+  
+  return(CI)
+}
+
 
 #### functions for plotting ####
 
@@ -1123,6 +1609,7 @@ rawData_TS_plot <- function(data, country,countryName){
   colnames(raw_data) <- c('week_time','count','category')
   
   # convert discrete week time to contious time series 
+
   raw_data$weekTS <- gsub("-", "-W", raw_data$week_time, fixed = TRUE)
   raw_data$weekTS <- week2date(raw_data$weekTS)
   raw_data$count <- as.numeric(as.character(raw_data$count))
@@ -1170,32 +1657,32 @@ predTS_plot <- function(pred){
   
   # the aweek package is used to convert from epidemiological weeks to dates
   pred$weekTS <- week2date(pred$weekTS)
-  
   # convert numbers from factors to numerics
   pred$Observation <- as.numeric(as.character(pred$Observation))
   pred$Prediction <- as.numeric(as.character(pred$Prediction))
   
   p <- ggplot(pred, aes(x = weekTS))
   
-  # plot observational category 
-  p <- p + geom_point(aes(y = Observation, color = "Observation"),size=3)
-  p <- p + geom_line(aes(y = Observation, color = "Observation"),size=0.8)
-  
   # plot predicted category
-  p <- p + geom_point(aes(y = Prediction, color = "Prediction"),size=3)
-  p <- p + geom_line(aes(y = Prediction, color = "Prediction"),size=0.8)
+  p <- p + geom_point(aes(y = Prediction, color = "Prediction"),size=1.5, alpha = 0.5)
+  p <- p + geom_line(aes(y = Prediction, color = "Prediction"),size=0.8, alpha = 0.5)
+
+  # plot observational category
+  p <- p + geom_point(aes(y = Observation, color = "Observation"),size=1)
+  p <- p + geom_line(aes(y = Observation, color = "Observation"),size=0.8)
   
   # use segment to show the difference between prediction and obsercation more clearly
   # p <- p + geom_segment(aes(xend = weekTS, yend = Prediction), alpha = .2)
   
   # modifying colours and theme options
-  p <- p + scale_colour_manual(values = c("darkslategray2", "salmon"))
+  # col <- c("Observation" = "#E08214", "Prediction" = "#8073AC")
+  p <- p + scale_colour_manual(labels = c("Observation", "Prediction"), values = c("#8073AC", "#E08214"))
   p <- p + scale_y_continuous(breaks = c(1:10))
-  p <- p + labs(y = "Category",
-                x = "Time",
+  p <- p + labs(y = "Incidence level",
+                x = "Year",
                 colour = "Category")
-  p <- p + theme(legend.position = c(0.8,0.85))
-  
+  # p <- p + theme(legend.position = c(0.8,0.85))
+  # 
   p
 }
 

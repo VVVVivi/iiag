@@ -576,7 +576,7 @@ region.lab.data <- eu.maps %>%
 xgb_euro_map <- borders("world", regions = eu_countries$mapName, colour="gray50", fill="white")
 ggplot() +  xgb_euro_map +
   geom_polygon(data = eu_xgb_map, 
-               aes(x = long, y = lat, group = group,fill = continent), color = "white")+
+               aes(x = long, y = lat, group = group, fill = continent), color = "white")+
   geom_text(aes(x = long, y = lat, label = region), data = region.lab.data,  size = 3, hjust = 0.5)+
   # scale_fill_manual(values = c("salmon"))+
   theme_bw()+

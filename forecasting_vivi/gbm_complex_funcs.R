@@ -9,9 +9,11 @@ gbm_complex <- function(data, country, num_category,nWeek_ahead,yr53week){
     initial_data <- rbind(initial_data, tmp)
   }
   initial_data <- as.data.frame(initial_data)
+  ub <- max(initial_data$incidence)*1.1
+  lb <- 0
 
   # Divide incidence into 10 categories
-  initial_data2 <- cbind(initial_data, cut_interval(initial_data$incidence, n=num_category))
+  initial_data2 <- cbind(initial_data, cut_interval(c(lb, initial_data$incidence,ub), n=num_category))
   colnames(initial_data2)[4] <- 'category'
   
   # match the intervals with numeric categories
@@ -204,10 +206,23 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
   }
   initial_data <- as.data.frame(initial_data)
   
-  # Divide incidence into 10 categories
-  initial_data2 <- cbind(initial_data, cut_interval(initial_data$incidence, n=num_category,ordered_result = TRUE))
-  colnames(initial_data2)[4] <- 'category'
+  ub <- max(initial_data$incidence, na.rm = TRUE)*1.1
+  lb <- 0
   
+  local.min <- which.min(initial_data$incidence)
+  local.max <- which.max(initial_data$incidence)
+  
+  incidence.vec <- initial_data$incidence
+  
+  for (i in 1:length(local.min)){
+    incidence.vec[local.min[i]] <- ifelse(local.min[i] == 0, local.min[i], lb)
+  }
+  
+  incidence.vec[local.max] <- ub
+
+  # Divide incidence into 10 categories
+  initial_data2 <- cbind(initial_data, cut_interval(incidence.vec, n=num_category,ordered_result = TRUE))
+  colnames(initial_data2)[4] <- 'category'
   
   # match the intervals with numeric categories
   levels_index <- levels(initial_data2$category)
@@ -221,8 +236,9 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
       initial_data2$category2[i] <- NA
     }
   }
-  initial_data2$category2 <- factor(initial_data2$category2, ordered = TRUE)
   
+  initial_data2$category2 <- factor(initial_data2$category2, levels = as.character(c(1:10)), ordered = TRUE)
+
   # convert into suitable stucture for gbm
   incidence_gbm <- matrix(NA, nrow = (dim(initial_data2)[1]-5), ncol=3)
   
@@ -234,6 +250,10 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
     incidence_gbm <- as.data.frame(incidence_gbm)
     colnames(incidence_gbm) <- c('Y_week0','week_1','week_2')
     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
+    incidence_gbm <- incidence_gbm %>% 
+      mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
+             week_1= factor(week_1, levels = c(1:10), ordered = TRUE),
+             week_2 = factor(week_2, levels = c(1:10), ordered = TRUE))
   }
   
   if(nWeek_ahead == 2){
@@ -244,6 +264,10 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
     incidence_gbm <- as.data.frame(incidence_gbm)
     colnames(incidence_gbm) <- c('Y_week0','week_2','week_3')
     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
+    incidence_gbm <- incidence_gbm %>% 
+      mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
+             week_2 = factor(week_2, levels = c(1:10), ordered = TRUE),
+             week_3 = factor(week_3, levels = c(1:10), ordered = TRUE))
   }
   
   if(nWeek_ahead == 3){
@@ -254,6 +278,10 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
     incidence_gbm <- as.data.frame(incidence_gbm)
     colnames(incidence_gbm) <- c('Y_week0','week_3','week_4')
     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
+    incidence_gbm <- incidence_gbm %>% 
+      mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
+             week_3 = factor(week_3, levels = c(1:10), ordered = TRUE),
+             week_4 = factor(week_4, levels = c(1:10), ordered = TRUE))
   }
   
   
@@ -265,8 +293,11 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
     incidence_gbm <- as.data.frame(incidence_gbm)
     colnames(incidence_gbm) <- c('Y_week0','week_4','week_5')
     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
+    incidence_gbm <- incidence_gbm %>% 
+      mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
+             week_4 = factor(week_4, levels = c(1:10), ordered = TRUE),
+             week_5 = factor(week_5, levels = c(1:10), ordered = TRUE))
   }
-  
   
   # add potential covariates
   # month: Jan - Dec
@@ -388,8 +419,8 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
   }
   
   incidence_gbm <- na.omit(incidence_gbm) %>% 
-    as.data.frame()
-
+    as.data.frame() 
+  
   incidence_gbm
 }
 
@@ -401,9 +432,12 @@ gbm_complex_fview <- function(data, us_states, num_category,nWeek_ahead,yr53week
     initial_data <- rbind(initial_data, tmp)
   }
   initial_data <- as.data.frame(initial_data)
+  ub <- max(initial_data$incidence)*1.1
+  lb <- 0
   
   # Divide incidence into 10 categories
-  initial_data2 <- cbind(initial_data, cut_interval(initial_data$incidence, n=num_category,ordered_result = TRUE))
+  initial_data2 <- cbind(initial_data, cut_interval(c(lb, initial_data$incidence,ub), 
+                                                    n=num_category,ordered_result = TRUE))
   colnames(initial_data2)[4] <- 'category'
   
   # match the intervals with numeric categories
