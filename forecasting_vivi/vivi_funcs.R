@@ -436,90 +436,107 @@ rolling_dat <- function(flu_data_complex, start_year, end_year){
   res
 }
 
-xgboost_rolling_dat <- function(train_list, test_list, nWeek_ahead, i){
+xgboost_rolling_dat <- function(train_list, test_list, i
+                                # nWeek_ahead
+                                ){
   train_matrix <- as.matrix(train_list[[1]])
   train_labels <- as.numeric(train_list[[2]])
   
   test_matrix <- as.matrix(test_list[[1]])
   test_labels <- as.numeric(test_list[[2]])
   
-  if(nWeek_ahead == 1){
-    if(i != 0){
-      new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>% 
-        as.matrix()
-      new_train_labels <- append(train_labels, head(test_labels,i)) %>% 
-        as.numeric()
-    }else{
-      new_train_matrix <- train_matrix
-      new_train_labels <- train_labels
-    }
-    
-    new_test_matrix <- t(test_matrix[i+1,]) %>% 
+  if(i != 0){
+    new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>%
       as.matrix()
-    new_test_labels <- test_labels[i+1] %>% 
+    new_train_labels <- append(train_labels, head(test_labels,i)) %>%
       as.numeric()
+  }else{
+    new_train_matrix <- train_matrix
+    new_train_labels <- train_labels
   }
 
-  # 2-week ahead
-  if(nWeek_ahead == 2){
-    rows <- dim(train_matrix)[1]
-    if(i <= 1){
-      new_train_matrix <- train_matrix[1:(rows-(1-i)),] %>% 
-        as.matrix()
-      new_train_labels <- train_labels[1:(rows-(1-i))] %>% 
-        as.numeric()
-    }
-    if(i > 1){
-      new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>% 
-        as.matrix()
-      new_train_labels <- append(train_labels, head(test_labels,i)) %>% 
-        as.numeric()
-    }
-    new_test_matrix <- t(test_matrix[i+1,]) %>% 
-      as.matrix()
-    new_test_labels <- test_labels[i+1] %>% 
-      as.numeric()
-  }
-  # 3-week ahead
-  if(nWeek_ahead == 3){
-    rows <- dim(train_matrix)[1]
-    if(i <= 2){
-      new_train_matrix <- train_matrix[1:(rows-(2-i)),] %>% 
-        as.matrix()
-      new_train_labels <- train_labels[1:(rows-(2-i))] %>% 
-        as.numeric()
-    }
-    if(i > 2){
-      new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>% 
-        as.matrix()
-      new_train_labels <- append(train_labels, head(test_labels,i)) %>% 
-        as.numeric()
-    }
-    new_test_matrix <- t(test_matrix[i+1,]) %>% 
-      as.matrix()
-    new_test_labels <- test_labels[i+1] %>% 
-      as.numeric()
-  }
-  # 4-week ahead
-  if(nWeek_ahead == 4){
-    rows <- dim(train_matrix)[1]
-    if(i <= 3){
-      new_train_matrix <- train_matrix[1:(rows-(3-i)),] %>% 
-        as.matrix()
-      new_train_labels <- train_labels[1:(rows-(3-i))] %>% 
-        as.numeric()
-    }
-    if(i > 3){
-      new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>% 
-        as.matrix()
-      new_train_labels <- append(train_labels, head(test_labels,i)) %>% 
-        as.numeric()
-    }
-    new_test_matrix <- t(test_matrix[i+1,]) %>% 
-      as.matrix()
-    new_test_labels <- test_labels[i+1] %>% 
-      as.numeric()
-  }
+  new_test_matrix <- t(test_matrix[i+1,]) %>%
+    as.matrix()
+  new_test_labels <- test_labels[i+1] %>%
+    as.numeric()
+  
+  # if(nWeek_ahead == 1){
+  #   if(i != 0){
+  #     new_train_matrix <- rbind(train_matrix, head(test_matrix, i)) %>%
+  #       as.matrix()
+  #     new_train_labels <- append(train_labels, head(test_labels,i)) %>%
+  #       as.numeric()
+  #   }else{
+  #     new_train_matrix <- train_matrix
+  #     new_train_labels <- train_labels
+  #   }
+  # 
+  #   new_test_matrix <- t(test_matrix[i+1,]) %>%
+  #     as.matrix()
+  #   new_test_labels <- test_labels[i+1] %>%
+  #     as.numeric()
+  # }
+
+  # # 2-week ahead
+  # if(nWeek_ahead == 2){
+  #   rows <- dim(train_matrix)[1]
+  #   if(i <= 1){
+  #     new_train_matrix <- train_matrix[1:(rows-(1-i)),] %>% 
+  #       as.matrix()
+  #     new_train_labels <- train_labels[1:(rows-(1-i))] %>% 
+  #       as.numeric()
+  #   }
+  #   if(i > 1){
+  #     new_train_matrix <- rbind(train_matrix, head(test_matrix, i-1)) %>% 
+  #       as.matrix()
+  #     new_train_labels <- append(train_labels, head(test_labels,i-1)) %>% 
+  #       as.numeric()
+  #   }
+  #   new_test_matrix <- t(test_matrix[i+1,]) %>% 
+  #     as.matrix()
+  #   new_test_labels <- test_labels[i+1] %>% 
+  #     as.numeric()
+  # }
+  # # 3-week ahead
+  # if(nWeek_ahead == 3){
+  #   rows <- dim(train_matrix)[1]
+  #   if(i <= 2){
+  #     new_train_matrix <- train_matrix[1:(rows-(2-i)),] %>% 
+  #       as.matrix()
+  #     new_train_labels <- train_labels[1:(rows-(2-i))] %>% 
+  #       as.numeric()
+  #   }
+  #   if(i > 2){
+  #     new_train_matrix <- rbind(train_matrix, head(test_matrix, i-2)) %>% 
+  #       as.matrix()
+  #     new_train_labels <- append(train_labels, head(test_labels,i-2)) %>% 
+  #       as.numeric()
+  #   }
+  #   new_test_matrix <- t(test_matrix[i+1,]) %>% 
+  #     as.matrix()
+  #   new_test_labels <- test_labels[i+1] %>% 
+  #     as.numeric()
+  # }
+  # # 4-week ahead
+  # if(nWeek_ahead == 4){
+  #   rows <- dim(train_matrix)[1]
+  #   if(i <= 3){
+  #     new_train_matrix <- train_matrix[1:(rows-(3-i)),] %>% 
+  #       as.matrix()
+  #     new_train_labels <- train_labels[1:(rows-(3-i))] %>% 
+  #       as.numeric()
+  #   }
+  #   if(i > 3){
+  #     new_train_matrix <- rbind(train_matrix, head(test_matrix, i-3)) %>% 
+  #       as.matrix()
+  #     new_train_labels <- append(train_labels, head(test_labels,i-3)) %>% 
+  #       as.numeric()
+  #   }
+  #   new_test_matrix <- t(test_matrix[i+1,]) %>% 
+  #     as.matrix()
+  #   new_test_labels <- test_labels[i+1] %>% 
+  #     as.numeric()
+  # }
 
   xgb_train <- xgb.DMatrix(data = new_train_matrix, label = new_train_labels)
   xgb_test <- xgb.DMatrix(data = new_test_matrix, label = new_test_labels)
@@ -645,7 +662,9 @@ xgboost.rolling.pred <- function(flu_data, country, num_category,
     # ts_labels <- rownames(ts_rolling)
     # xgb_tr_new <- xgb.DMatrix(data = tr_rolling,label = tr_labels)
     # xgb_ts_new <- xgb.DMatrix(data = ts_rolling,label = ts_labels)
-    xgb_data <- xgboost_rolling_dat(xgb_tr_list, xgb_ts_list, nWeek_ahead, i)
+    xgb_data <- xgboost_rolling_dat(xgb_tr_list, xgb_ts_list, i
+                                    # nWeek_ahead
+                                    )
     
     xgb_train <- xgb_data[[1]]
     xgb_test <- xgb_data[[2]]

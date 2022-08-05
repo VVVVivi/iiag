@@ -394,7 +394,7 @@ MAE_line_roll <- ggplot(MAE_score_roll, aes(x = Week_ahead,y = macroMAE, group=Y
   geom_line(size = 1)+
   geom_errorbar(aes(ymin = lb, ymax = ub), width = 0.2,
                 position=position_dodge(0.05))+
-  coord_cartesian(ylim = c(0.2, 0.7))+
+  coord_cartesian(ylim = c(0.3, 1.6))+
   # ylim(0.7,1.8)+
   labs(y = "macro-average Mean Absolute Error",
        x = "n-week ahead",
@@ -1048,9 +1048,9 @@ TS_4week_MZE <- TS_4week %>%
   filter(Country %in% c("MDA", "NLD", "USA", "AUT"))%>%
   mutate(Week_ahead = "4-week")
 
-TS_overall_MZE <- rbind(TS_1week, TS_2week) %>% 
-  rbind(., TS_3week) %>% 
-  rbind(., TS_4week) %>% 
+TS_overall_MZE <- rbind(TS_1week_MZE, TS_2week_MZE) %>% 
+  rbind(., TS_3week_MZE) %>% 
+  rbind(., TS_4week_MZE) %>% 
   mutate(Week_ahead = factor(Week_ahead, levels = unique(Week_ahead)),
          Country = case_when(Country == "AUT" ~"Austria",
                              Country == "MDA" ~ "Moldova",

@@ -242,62 +242,66 @@ gbm_complex_WHO <- function(data, country, num_category,nWeek_ahead, yr53week){
   # convert into suitable stucture for gbm
   incidence_gbm <- matrix(NA, nrow = (dim(initial_data2)[1]-5), ncol=3)
   
-  if(nWeek_ahead == 1){
-    for (i in 1:nrow(incidence_gbm)){
-      incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+4),(i+3))]
-    }
-    
-    incidence_gbm <- as.data.frame(incidence_gbm)
-    colnames(incidence_gbm) <- c('Y_week0','week_1','week_2')
-    rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
-    incidence_gbm <- incidence_gbm %>% 
-      mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
-             week_1= factor(week_1, levels = c(1:10), ordered = TRUE),
-             week_2 = factor(week_2, levels = c(1:10), ordered = TRUE))
+  for (i in 1:nrow(incidence_gbm)){
+    incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+4),(i+3))]
   }
   
-  if(nWeek_ahead == 2){
-    for (i in 1:nrow(incidence_gbm)){
-      incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+3),(i+2))]
-    }
-    
-    incidence_gbm <- as.data.frame(incidence_gbm)
-    colnames(incidence_gbm) <- c('Y_week0','week_2','week_3')
-    rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
-    incidence_gbm <- incidence_gbm %>% 
-      mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
-             week_2 = factor(week_2, levels = c(1:10), ordered = TRUE),
-             week_3 = factor(week_3, levels = c(1:10), ordered = TRUE))
-  }
+   if(nWeek_ahead == 1){
+     for (i in 1:nrow(incidence_gbm)){
+       incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+4),(i+3))]
+     }
   
-  if(nWeek_ahead == 3){
-    for (i in 1:nrow(incidence_gbm)){
-      incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+2),(i+1))]
-    }
-    
-    incidence_gbm <- as.data.frame(incidence_gbm)
-    colnames(incidence_gbm) <- c('Y_week0','week_3','week_4')
-    rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
-    incidence_gbm <- incidence_gbm %>% 
-      mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
-             week_3 = factor(week_3, levels = c(1:10), ordered = TRUE),
-             week_4 = factor(week_4, levels = c(1:10), ordered = TRUE))
-  }
+     incidence_gbm <- as.data.frame(incidence_gbm)
+     colnames(incidence_gbm) <- c('Y_week0','week_1','week_2')
+     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
+     incidence_gbm <- incidence_gbm %>%
+       mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
+              week_1= factor(week_1, levels = c(1:10), ordered = TRUE),
+              week_2 = factor(week_2, levels = c(1:10), ordered = TRUE))
+   }
+
+   if(nWeek_ahead == 2){
+     for (i in 1:nrow(incidence_gbm)){
+       incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+3),(i+2))]
+     }
+  
+     incidence_gbm <- as.data.frame(incidence_gbm)
+     colnames(incidence_gbm) <- c('Y_week0','week_2','week_3')
+     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
+     incidence_gbm <- incidence_gbm %>%
+       mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
+              week_2 = factor(week_2, levels = c(1:10), ordered = TRUE),
+              week_3 = factor(week_3, levels = c(1:10), ordered = TRUE))
+   }
+  
+   if(nWeek_ahead == 3){
+     for (i in 1:nrow(incidence_gbm)){
+       incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+2),(i+1))]
+     }
+  
+     incidence_gbm <- as.data.frame(incidence_gbm)
+     colnames(incidence_gbm) <- c('Y_week0','week_3','week_4')
+     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
+     incidence_gbm <- incidence_gbm %>%
+       mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
+              week_3 = factor(week_3, levels = c(1:10), ordered = TRUE),
+              week_4 = factor(week_4, levels = c(1:10), ordered = TRUE))
+   }
   
   
-  if(nWeek_ahead == 4){
-    for (i in 1:nrow(incidence_gbm)){
-      incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+1),i)]
-    }
-    
-    incidence_gbm <- as.data.frame(incidence_gbm)
-    colnames(incidence_gbm) <- c('Y_week0','week_4','week_5')
-    rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
-    incidence_gbm <- incidence_gbm %>% 
-      mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
-             week_4 = factor(week_4, levels = c(1:10), ordered = TRUE),
-             week_5 = factor(week_5, levels = c(1:10), ordered = TRUE))
-  }
+   if(nWeek_ahead == 4){
+     for (i in 1:nrow(incidence_gbm)){
+       incidence_gbm[i,] <- initial_data2$category2[c((i+5),(i+1),i)]
+     }
+  
+     incidence_gbm <- as.data.frame(incidence_gbm)
+     colnames(incidence_gbm) <- c('Y_week0','week_4','week_5')
+     rownames(incidence_gbm) <- as.character(initial_data2$time_name[6:nrow(initial_data2)])
+     incidence_gbm <- incidence_gbm %>%
+       mutate(Y_week0 = factor(Y_week0, levels = c(1:10), ordered = TRUE),
+              week_4 = factor(week_4, levels = c(1:10), ordered = TRUE),
+              week_5 = factor(week_5, levels = c(1:10), ordered = TRUE))
+   }
   
   # add potential covariates
   # month: Jan - Dec
