@@ -2,58 +2,58 @@
 ############# Data processing functions ###########
 #' Load WHO FluID data set.
 #' From 2010 week 1 to 2018 week 9 
-load.iiag.data.fluid <- function(datadir="../iiag_data/data_old/") {
-  
-  ## Helper function to fix some header names to be used below
-  fix_headers <- function(x) {
-    curnames <- names(x)
-    newnames <- curnames
-    if (!is.na(match("ISO_Week",curnames))) {
-      newnames[match("ISO_Week",curnames)] <- "ISO_WEEK"
-    }
-    if (!is.na(match("ï..ISO3",curnames))) {
-      newnames[match("ï..ISO3",curnames)] <- "ISO3"
-    }
-    newnames
-  }
-  
-  ## Define the strings for all the files needed and read 
-  # fid_this <- read.csv(paste(datadir,"/2019-2020_FluIDData.csv",sep=""))
-  fid_old_3 <- read.csv(paste0(datadir,"/2017-2018_FluIDData.csv",sep=""))
-  fid_old_2 <- read.csv(paste0(datadir,"/2014-2016_FluIDData.csv",sep=""))
-  fid_old_1 <- read.csv(paste0(datadir,"/2010-2013_FluIDData.csv",sep=""))
-  # fid_old_0 <- read.csv(paste0(datadir,"/2000-2009_FluIDData.csv",sep=""))
-  # fnet_this <- read.csv(paste(datadir,"/2017-2018_FluNetData_20190110.csv",sep=""))
-  # fnet_old_3 <- read.csv(paste(datadir,"/2017-2018_FluNetData.csv",sep=""))
-  # fnet_old_2 <- read.csv(paste(datadir,"/2014-2016_FluNetData.csv",sep=""))
-  # fnet_old_1 <- read.csv(paste(datadir,"/2010-2013_FluNetData.csv",sep=""))
-  # fnet_old_0 <- read.csv(paste(datadir,"/2000-2009_FluNetData.csv",sep=""))
-  
-  ## Fix names for flu id
-  # names(fid_this) <- fix_headers(fid_this)
-  names(fid_old_1) <- fix_headers(fid_old_1)
-  names(fid_old_2) <- fix_headers(fid_old_2)
-  names(fid_old_3) <- fix_headers(fid_old_3)
-  # names(fnet_old_1) <- fix_headers(fnet_old_1)
-  # names(fnet_old_2) <- fix_headers(fnet_old_2)
-  # names(fnet_old_3) <- fix_headers(fnet_old_3)
-  # names(fnet_this) <- fix_headers(fnet_this)
-
-  ## Use rbind to make the large tables. Should throw an error if the column
-  ## names change in the future.
-  # dfId <- rbind(fid_old_0,fid_old_2,fid_old_2,fid_old_3,fid_this)
-  # dfNet <- rbind(fnet_old_0,fnet_old_2,fnet_old_2,fnet_old_3,fnet_this)
-  dfId <- rbind(fid_old_1,fid_old_2,fid_old_3)
-  # dfNet <- rbind(fnet_old_1,fnet_old_2,fnet_old_3,fnet_this)
-  
-  ## Sort both dataframe just incase
-  dfId <- dfId[order(dfId$ISO2,dfId$ISO_YEAR,dfId$ISO_WEEK),]
-  # dfNet <- dfNet[order(dfNet$ISO2,dfNet$ISO_YEAR,dfNet$ISO_WEEK),]
-  
-  ## Return the two datasets as a list
-  # list(lab=dfNet,synd=dfId)
-  dfId
-}
+# load.iiag.data.fluid <- function(datadir="../iiag_data/data_old/") {
+#   
+#   ## Helper function to fix some header names to be used below
+#   fix_headers <- function(x) {
+#     curnames <- names(x)
+#     newnames <- curnames
+#     if (!is.na(match("ISO_Week",curnames))) {
+#       newnames[match("ISO_Week",curnames)] <- "ISO_WEEK"
+#     }
+#     if (!is.na(match("ï..ISO3",curnames))) {
+#       newnames[match("ï..ISO3",curnames)] <- "ISO3"
+#     }
+#     newnames
+#   }
+#   
+#   ## Define the strings for all the files needed and read 
+#   # fid_this <- read.csv(paste(datadir,"/2019-2020_FluIDData.csv",sep=""))
+#   fid_old_3 <- read.csv(paste0(datadir,"/2017-2018_FluIDData.csv",sep=""))
+#   fid_old_2 <- read.csv(paste0(datadir,"/2014-2016_FluIDData.csv",sep=""))
+#   fid_old_1 <- read.csv(paste0(datadir,"/2010-2013_FluIDData.csv",sep=""))
+#   # fid_old_0 <- read.csv(paste0(datadir,"/2000-2009_FluIDData.csv",sep=""))
+#   # fnet_this <- read.csv(paste(datadir,"/2017-2018_FluNetData_20190110.csv",sep=""))
+#   # fnet_old_3 <- read.csv(paste(datadir,"/2017-2018_FluNetData.csv",sep=""))
+#   # fnet_old_2 <- read.csv(paste(datadir,"/2014-2016_FluNetData.csv",sep=""))
+#   # fnet_old_1 <- read.csv(paste(datadir,"/2010-2013_FluNetData.csv",sep=""))
+#   # fnet_old_0 <- read.csv(paste(datadir,"/2000-2009_FluNetData.csv",sep=""))
+#   
+#   ## Fix names for flu id
+#   # names(fid_this) <- fix_headers(fid_this)
+#   names(fid_old_1) <- fix_headers(fid_old_1)
+#   names(fid_old_2) <- fix_headers(fid_old_2)
+#   names(fid_old_3) <- fix_headers(fid_old_3)
+#   # names(fnet_old_1) <- fix_headers(fnet_old_1)
+#   # names(fnet_old_2) <- fix_headers(fnet_old_2)
+#   # names(fnet_old_3) <- fix_headers(fnet_old_3)
+#   # names(fnet_this) <- fix_headers(fnet_this)
+# 
+#   ## Use rbind to make the large tables. Should throw an error if the column
+#   ## names change in the future.
+#   # dfId <- rbind(fid_old_0,fid_old_2,fid_old_2,fid_old_3,fid_this)
+#   # dfNet <- rbind(fnet_old_0,fnet_old_2,fnet_old_2,fnet_old_3,fnet_this)
+#   dfId <- rbind(fid_old_1,fid_old_2,fid_old_3)
+#   # dfNet <- rbind(fnet_old_1,fnet_old_2,fnet_old_3,fnet_this)
+#   
+#   ## Sort both dataframe just incase
+#   dfId <- dfId[order(dfId$ISO2,dfId$ISO_YEAR,dfId$ISO_WEEK),]
+#   # dfNet <- dfNet[order(dfNet$ISO2,dfNet$ISO_YEAR,dfNet$ISO_WEEK),]
+#   
+#   ## Return the two datasets as a list
+#   # list(lab=dfNet,synd=dfId)
+#   dfId
+# }
 
 
 extract.incidence.who <- function( dfId,
