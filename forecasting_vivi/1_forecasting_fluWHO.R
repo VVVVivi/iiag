@@ -32,8 +32,7 @@ sel_iso_xgb <- fluWHO[[2]]
 # best_logloss = Inf
 # best_logloss_index = 0
 
-xgb_params <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
-                     subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
+xgb_params <- readRDS("./saved_objects/hyperpara_list_final.rds")
 
 ########## 1-week ahead forecast #######
 acc_1week_pred15_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence, 
@@ -43,7 +42,7 @@ acc_1week_pred15_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 1, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 acc_1week_pred15_fix <- compare_accuracy(flu_data = fluWHO_incidence, 
