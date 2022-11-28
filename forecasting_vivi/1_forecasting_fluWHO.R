@@ -7,6 +7,7 @@ knitr.table.format = "markdown"
 #' As always, remove all objects fromt the workspace before starting.
 rm(list = ls(all = TRUE))
 
+setwd("C:/Users/hw3616/Desktop/Imperial/Project1_Forecasting/Project_Coding/iiag/forecasting_vivi")
 setwd("C:/Users/haowe/Desktop/iiag/forecasting_vivi")
 
 #' Pull in packages needed
@@ -313,46 +314,46 @@ saveRDS(acc_WHO_roll_fix, "./saved_objects/acc_WHO_roll_fix_new.rds")
 
 # smallestMZE <- 100
 # smallestMAE <- 100
-df_cv <- data.frame()
-bts_list <- list()
-
-for (depth in seq(1,6,1)){
-  for (rounds in seq(100, 500, 100)){
-    err_MZE <- c()
-    err_MAE <- c()
-    
-    indexCount <- 1
-    
-    xgb_params <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
-                       subsample=1, colsample_bytree=1,eval_metric = "mlogloss", max_depth = depth)
-    
-    for (train_num_start in seq(0, 2, 1)){
-      bts <- compare_accuracy(flu_data = fluWHO_incidence, 
-                              country = sel_iso_xgb, 
-                              num_category = 10, 
-                              train_num_start = train_num_start, 
-                              train_num_end = 1,
-                              nWeek_ahead = 1, 
-                              yr53week = 2015,
-                              nrounds = rounds,
-                              params_list = xgb_params)
-      bts_list <- append(bts_list, bts)
-      gc()
-      
-      err_MZE <- c(err_MZE, bts$MZE)
-      err_MAE <- c(err_MAE, bts$macroMAE)
-      
-    }
-    df_cv <- rbind(df_cv, c(depth,rounds, mean(err_MZE), mean(err_MAE)))
-    
-  }
-}
+# df_cv <- data.frame()
+# bts_list <- list()
+# 
+# for (depth in seq(1,6,1)){
+#   for (rounds in seq(100, 500, 100)){
+#     err_MZE <- c()
+#     err_MAE <- c()
+#     
+#     indexCount <- 1
+#     
+#     xgb_params <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
+#                        subsample=1, colsample_bytree=1,eval_metric = "mlogloss", max_depth = depth)
+#     
+#     for (train_num_start in seq(0, 2, 1)){
+#       bts <- compare_accuracy(flu_data = fluWHO_incidence, 
+#                               country = sel_iso_xgb, 
+#                               num_category = 10, 
+#                               train_num_start = train_num_start, 
+#                               train_num_end = 1,
+#                               nWeek_ahead = 1, 
+#                               yr53week = 2015,
+#                               nrounds = rounds,
+#                               params_list = xgb_params)
+#       bts_list <- append(bts_list, bts)
+#       gc()
+#       
+#       err_MZE <- c(err_MZE, bts$MZE)
+#       err_MAE <- c(err_MAE, bts$macroMAE)
+#       
+#     }
+#     df_cv <- rbind(df_cv, c(depth,rounds, mean(err_MZE), mean(err_MAE)))
+#     
+#   }
+# }
 
 #' according to results of CV, nrounds = 100 and depth = 6 give minimum macro MAE, at 1.417120, MZE = 0.2310000
 #' minimum MZE is given by nroudns = 200 and depth = 1, MZE = 0.2310000 and MAE = 1.480200
 
 ########## individual countries #########
-acc_WHO_roll_fix <- readRDS("./saved_objects/acc_WHO_roll_fix.rds")
+acc_WHO_roll_fix <- readRDS("./saved_objects/acc_WHO_roll_fix_new.rds")
 
 indi_country_acc <- function(overall_pred, country, num_category){
   require(dplyr)
@@ -925,12 +926,12 @@ indi_acc_roll_fix <- rbind(indi_acc_1week_pred15_rol, indi_acc_1week_pred16_rol,
                            indi_acc_3week_pred15_fix, indi_acc_3week_pred16_fix, indi_acc_3week_pred17_fix,
                            indi_acc_4week_pred15_fix, indi_acc_4week_pred16_fix, indi_acc_4week_pred17_fix)
 
-write.csv(indi_acc_roll_fix, "./saved_objects/indi_acc_roll_fix.csv", row.names = FALSE)
+write.csv(indi_acc_roll_fix, "./saved_objects/indi_acc_roll_fix_new.csv", row.names = FALSE)
 
 indi_acc_roll_fix_by_countryWeek <- indi_acc_roll_fix %>% 
   arrange(Country, Week_ahead)
 
-write.csv(indi_acc_roll_fix_by_countryWeek, "./saved_objects/indi_acc_roll_fix_by_countryWeek.csv", 
+write.csv(indi_acc_roll_fix_by_countryWeek, "./saved_objects/indi_acc_roll_fix_by_countryWeek_new.csv", 
           row.names = FALSE)
 
 ############ baseline model ############
