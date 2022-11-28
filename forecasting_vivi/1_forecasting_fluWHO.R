@@ -52,7 +52,7 @@ acc_1week_pred15_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 1, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 acc_1week_pred16_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence, 
@@ -62,7 +62,7 @@ acc_1week_pred16_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 1, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 
@@ -73,7 +73,7 @@ acc_1week_pred16_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 1, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 
@@ -84,7 +84,7 @@ acc_1week_pred17_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 1, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 
@@ -95,7 +95,7 @@ acc_1week_pred17_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 1, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 
@@ -107,7 +107,7 @@ acc_2week_pred15_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4 ,
                                                  nWeek_ahead = 2, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 
@@ -118,7 +118,7 @@ acc_2week_pred15_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 2, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 acc_2week_pred16_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence, 
@@ -128,7 +128,7 @@ acc_2week_pred16_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 2, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 
@@ -139,7 +139,7 @@ acc_2week_pred16_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 2, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 acc_2week_pred17_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence, 
@@ -149,7 +149,7 @@ acc_2week_pred17_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 2, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 
@@ -160,7 +160,7 @@ acc_2week_pred17_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 2, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 ########## 3-week ahead forecast #######
@@ -171,7 +171,7 @@ acc_3week_pred15_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4 ,
                                                  nWeek_ahead = 3, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 
@@ -182,7 +182,7 @@ acc_3week_pred15_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 3, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 acc_3week_pred16_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence, 
@@ -192,7 +192,7 @@ acc_3week_pred16_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 3, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 acc_3week_pred16_fix <- compare_accuracy(flu_data = fluWHO_incidence, 
@@ -202,7 +202,7 @@ acc_3week_pred16_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 3, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 acc_3week_pred17_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence, 
@@ -212,7 +212,7 @@ acc_3week_pred17_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 3, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 acc_3week_pred17_fix <- compare_accuracy(flu_data = fluWHO_incidence, 
@@ -222,7 +222,7 @@ acc_3week_pred17_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 3, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 ########## 4-week ahead forecast #######
@@ -233,7 +233,7 @@ acc_4week_pred15_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 4, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 
@@ -244,7 +244,7 @@ acc_4week_pred15_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4,
                                          nWeek_ahead = 4, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 acc_4week_pred16_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence, 
@@ -254,7 +254,7 @@ acc_4week_pred16_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 4, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 acc_4week_pred16_fix <- compare_accuracy(flu_data = fluWHO_incidence, 
@@ -264,7 +264,7 @@ acc_4week_pred16_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 4, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 acc_4week_pred17_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence, 
@@ -274,7 +274,7 @@ acc_4week_pred17_rol <- compare_accuracy_rolling(flu_data = fluWHO_incidence,
                                                  train_num_end = 4,
                                                  nWeek_ahead = 4, 
                                                  yr53week = 2015,
-                                                 nrounds = 100,
+                                                 nrounds = 300,
                                                  params_list = xgb_params)
 
 acc_4week_pred17_fix <- compare_accuracy(flu_data = fluWHO_incidence, 
@@ -284,7 +284,7 @@ acc_4week_pred17_fix <- compare_accuracy(flu_data = fluWHO_incidence,
                                          train_num_end = 4 ,
                                          nWeek_ahead = 4, 
                                          yr53week = 2015,
-                                         nrounds = 100,
+                                         nrounds = 300,
                                          params_list = xgb_params)
 
 acc_WHO_roll_fix <- list(acc_1week_pred15_rol = acc_1week_pred15_rol, acc_1week_pred16_rol = acc_1week_pred16_rol, 
@@ -304,7 +304,7 @@ acc_WHO_roll_fix <- list(acc_1week_pred15_rol = acc_1week_pred15_rol, acc_1week_
                      acc_4week_pred15_fix = acc_4week_pred15_fix, acc_4week_pred16_fix = acc_4week_pred16_fix,
                      acc_4week_pred17_fix = acc_4week_pred17_fix)
 
-saveRDS(acc_WHO_roll_fix, "./saved_objects/acc_WHO_roll_fix.rds")
+saveRDS(acc_WHO_roll_fix, "./saved_objects/acc_WHO_roll_fix_new.rds")
 
 ########### cross validation ###########
 #' 2010-2014 is used for cross validation. 2010-2011 train, 2012 test; 2011-2012 train, 2013 test; 

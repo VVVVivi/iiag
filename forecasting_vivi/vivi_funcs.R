@@ -373,7 +373,7 @@ check_sample_size <- function(flu_data, country_list, numWeek_ahead,
 
 ############### XGBoost forecasting functions ##############
 #' Convert dataframe into matrix
-xgboost_dat <- function(flu_data_complex, start_year, end_year){
+xgboost_dat <- function(flu_data_complex, trainOrTest, start_year, end_year){
   require(dplyr)
   
   flu_data_complex$month <- as.factor(flu_data_complex$month)
@@ -400,24 +400,45 @@ xgboost_dat <- function(flu_data_complex, start_year, end_year){
 
   new_dat <- dat[start_index:end_index,]
   new_dat_labels <- dat_labels[start_index:end_index]
-  xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
-  xgb_dat
+  
+  if(trainOrTest == "train"){
+    # new_val_matrix <- tail(new_dat, nrow(new_dat)*0.2-1) %>%
+    #   as.matrix()
+    # new_val_labels <- tail(new_dat_labels, length(new_dat_labels)*0.2-1)%>%
+    #   as.matrix()
+    # 
+    # new_train_matrix <- head(new_dat, nrow(new_dat)*0.8)%>%
+    #   as.matrix()
+    # new_train_labels <- head(new_dat_labels, length(new_dat_labels)*0.8) %>%
+    #   as.matrix()
+    # 
+    # xgb_train <- xgb.DMatrix(data = new_train_matrix, label = new_train_labels)
+    # xgb_val <- xgb.DMatrix(data = new_val_matrix, label = new_val_labels)
+    # xgb_dat <- list(xgb_train = xgb_train, 
+    #             xgb_val = xgb_val)
+    xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
+  }
+  if(trainOrTest == "test"){
+    xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
+  }
+  
+  return(xgb_dat)
 }
 
 
 rolling_dat <- function(flu_data_complex, start_year, end_year){
   require(dplyr)
-  
+
   flu_data_complex$month <- as.factor(flu_data_complex$month)
   flu_data_complex$season <- as.factor(flu_data_complex$season)
-  
+
   start_year <- as.character(start_year)
   end_year <- as.character(end_year)
-  
+
   start_index <- grep(start_year,rownames(flu_data_complex))[1]
   end <- grep(end_year,rownames(flu_data_complex))
   end_index <- end[length(end)]
-  
+
   # XGBoost requires the classes to be in a numeric format, starting with 0.
   dat_labels <- as.numeric(flu_data_complex$Y_week0)-1
   dat <- model.matrix(~.+0, contrasts.arg = lapply(flu_data_complex[,4:5], contrasts, contrasts=FALSE),
@@ -432,7 +453,7 @@ rolling_dat <- function(flu_data_complex, start_year, end_year){
   new_dat_labels <- dat_labels[start_index:end_index]
   # xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
   res <- list(new_dat, new_dat_labels)
-  
+
   res
 }
 
@@ -454,7 +475,18 @@ xgboost_rolling_dat <- function(train_list, test_list, i
     new_train_matrix <- train_matrix
     new_train_labels <- train_labels
   }
-
+  # define 20% of training set as validation set
+  # new_val_matrix <- tail(new_train_matrix, nrow(new_train_matrix)*0.2-1) %>%
+  #   as.matrix()
+  # new_val_labels <- tail(new_train_labels, length(new_train_labels)*0.2-1)%>%
+  #   as.matrix()
+  # 
+  # new_train_matrix <- head(new_train_matrix, nrow(new_train_matrix)*0.8)%>%
+  #   as.matrix()
+  # new_train_labels <- head(new_train_labels, length(new_train_labels)*0.8) %>%
+  #   as.matrix()
+  # 
+  # define test set
   new_test_matrix <- t(test_matrix[i+1,]) %>%
     as.matrix()
   new_test_labels <- test_labels[i+1] %>%
@@ -539,8 +571,10 @@ xgboost_rolling_dat <- function(train_list, test_list, i
   # }
 
   xgb_train <- xgb.DMatrix(data = new_train_matrix, label = new_train_labels)
+  # xgb_val <- xgb.DMatrix(data = new_val_matrix, label = new_val_labels)
   xgb_test <- xgb.DMatrix(data = new_test_matrix, label = new_test_labels)
   
+  # xgb_data <- list(xgb_train, xgb_val, xgb_test)
   xgb_data <- list(xgb_train, xgb_test)
   
   xgb_data
@@ -570,17 +604,24 @@ xgboost.model.pred <- function(flu_data, country, num_category,
     end_year_ts <- start_year_ts
   }
 
-  xgb_tr <- xgboost_dat(flu_data_complex, start_year_tr, end_year_tr)
-  xgb_ts <- xgboost_dat(flu_data_complex, start_year_ts, end_year_ts)
+  # xgb_tr_list <- xgboost_dat(flu_data_complex, "train", start_year_tr, end_year_tr)
+  # xgb_tr <- xgb_tr_list[[1]]
+  # xgb_val <- xgb_tr_list[[2]]
+  
+  xgb_tr <- xgboost_dat(flu_data_complex, "train", start_year_tr, end_year_tr)
+  xgb_ts <- xgboost_dat(flu_data_complex, "test", start_year_ts, end_year_ts)
   
   # train the xgboost model
   # params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
   #                      subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
 
-  watchlist <- list(train = xgb_tr, test = xgb_ts)
+  # watchlist <- list(train = xgb_tr, test = xgb_val)
+  set.seed(1)
   xgb_model <- xgb.train(params = params_list, data = xgb_tr, nrounds = nrounds, 
-                         watchlist = watchlist,verbose = 2, print_every_n = 10,
-                         early_stopping_round = 20)
+                         # watchlist = watchlist,
+                         verbose = 2, print_every_n = 10
+                         # early_stopping_round = 20
+                         )
   xgb_pred <- predict(xgb_model, newdata = xgb_ts)
   start_year_ts_index <- grep(start_year_ts,rownames(flu_data_complex))[1]
   end_ts <- grep(end_year_ts,rownames(flu_data_complex))
@@ -667,16 +708,20 @@ xgboost.rolling.pred <- function(flu_data, country, num_category,
                                     )
     
     xgb_train <- xgb_data[[1]]
+    # xgb_val <- xgb_data[[2]]
     xgb_test <- xgb_data[[2]]
     
     # train the model
     # params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
     #                      subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
-    watchlist <- list(train = xgb_train, test = xgb_test)
+    # watchlist <- list(train = xgb_train, test = xgb_val)
     
+    set.seed(1)
     xgb_model <- xgb.train(params = params_list, data = xgb_train, nrounds = nrounds, 
-                           watchlist = watchlist,verbose = 2, print_every_n = 10,
-                           early_stopping_round = 20)
+                           # watchlist = watchlist,
+                           verbose = 2, print_every_n = 10
+                           # early_stopping_round = 20
+                           )
     
     xgb_pred <- predict(xgb_model, newdata = xgb_test)
     pred_mat <- rbind(pred_mat, xgb_pred)
@@ -915,35 +960,35 @@ compare_accuracy_rolling <- function(flu_data, country_list,num_category,
 }
 
 #' shows the output of xgboost model 
-xgboost.model.train <- function(flu_data, country, num_category,
-                                train_num_start, train_num_end, nWeek_ahead){
-  # set up dataset for xgboost
-  flu_data_complex <- gbm_complex(flu_data, country, num_category, nWeek_ahead)
-  
-  year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
-  year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
-  start_year_tr <- year_start + train_num_start
-  end_year_tr <-  start_year_tr + train_num_end
-  start_year_ts <- end_year_tr + 1
-  
-  if ((start_year_ts == 2017 && year_end == 2018) == TRUE ){
-    end_year_ts <- year_end
-  }else{
-    end_year_ts <- start_year_ts
-  }
-  
-  xgb_tr <- xgboost_dat(flu_data_complex, start_year_tr, end_year_tr)
-  xgb_ts <- xgboost_dat(flu_data_complex, start_year_ts, end_year_ts)
-  
-  # train the xgboost model
-  params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
-                       subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
-  watchlist <- list(train = xgb_tr, test = xgb_ts)
-  xgb_model <- xgb.train(params = params.train, data = xgb_tr, nrounds = 100, 
-                         watchlist = watchlist,verbose = 2, print_every_n = 10,
-                         early_stopping_round = 20)
-  xgb_model
-}
+# xgboost.model.train <- function(flu_data, country, num_category,
+#                                 train_num_start, train_num_end, nWeek_ahead){
+#   # set up dataset for xgboost
+#   flu_data_complex <- gbm_complex(flu_data, country, num_category, nWeek_ahead)
+#   
+#   year_start <- min(as.numeric(substr(rownames(flu_data_complex),0,4)))
+#   year_end <- max(as.numeric(substr(rownames(flu_data_complex),0,4)))
+#   start_year_tr <- year_start + train_num_start
+#   end_year_tr <-  start_year_tr + train_num_end
+#   start_year_ts <- end_year_tr + 1
+#   
+#   if ((start_year_ts == 2017 && year_end == 2018) == TRUE ){
+#     end_year_ts <- year_end
+#   }else{
+#     end_year_ts <- start_year_ts
+#   }
+#   
+#   xgb_tr <- xgboost_dat(flu_data_complex, start_year_tr, end_year_tr)
+#   xgb_ts <- xgboost_dat(flu_data_complex, start_year_ts, end_year_ts)
+#   
+#   # train the xgboost model
+#   params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
+#                        subsample=1, colsample_bytree=1,eval_metric = "mlogloss")
+#   watchlist <- list(train = xgb_tr, test = xgb_ts)
+#   xgb_model <- xgb.train(params = params.train, data = xgb_tr, nrounds = 100, 
+#                          watchlist = watchlist,verbose = 2, print_every_n = 10,
+#                          early_stopping_round = 20)
+#   xgb_model
+# }
 
 #' shows the prediction results of xgboost model
 xgboost.model.pred.output <- function(flu_data_complex, start_year_ts,
