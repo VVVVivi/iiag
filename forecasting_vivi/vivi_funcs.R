@@ -11,8 +11,8 @@
 #     if (!is.na(match("ISO_Week",curnames))) {
 #       newnames[match("ISO_Week",curnames)] <- "ISO_WEEK"
 #     }
-#     if (!is.na(match("ï..ISO3",curnames))) {
-#       newnames[match("ï..ISO3",curnames)] <- "ISO3"
+#     if (!is.na(match("?..ISO3",curnames))) {
+#       newnames[match("?..ISO3",curnames)] <- "ISO3"
 #     }
 #     newnames
 #   }
@@ -373,7 +373,7 @@ check_sample_size <- function(flu_data, country_list, numWeek_ahead,
 
 ############### XGBoost forecasting functions ##############
 #' Convert dataframe into matrix
-xgboost_dat <- function(flu_data_complex, trainOrTest, start_year, end_year){
+xgboost_dat <- function(flu_data_complex, start_year, end_year){
   require(dplyr)
   
   flu_data_complex$month <- as.factor(flu_data_complex$month)
@@ -401,26 +401,28 @@ xgboost_dat <- function(flu_data_complex, trainOrTest, start_year, end_year){
   new_dat <- dat[start_index:end_index,]
   new_dat_labels <- dat_labels[start_index:end_index]
   
-  if(trainOrTest == "train"){
-    # new_val_matrix <- tail(new_dat, nrow(new_dat)*0.2-1) %>%
-    #   as.matrix()
-    # new_val_labels <- tail(new_dat_labels, length(new_dat_labels)*0.2-1)%>%
-    #   as.matrix()
-    # 
-    # new_train_matrix <- head(new_dat, nrow(new_dat)*0.8)%>%
-    #   as.matrix()
-    # new_train_labels <- head(new_dat_labels, length(new_dat_labels)*0.8) %>%
-    #   as.matrix()
-    # 
-    # xgb_train <- xgb.DMatrix(data = new_train_matrix, label = new_train_labels)
-    # xgb_val <- xgb.DMatrix(data = new_val_matrix, label = new_val_labels)
-    # xgb_dat <- list(xgb_train = xgb_train, 
-    #             xgb_val = xgb_val)
-    xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
-  }
-  if(trainOrTest == "test"){
-    xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
-  }
+  xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
+  xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
+  # if(trainOrTest == "train"){
+  #   new_val_matrix <- tail(new_dat, nrow(new_dat)*0.2-1) %>%
+  #     as.matrix()
+  #   new_val_labels <- tail(new_dat_labels, length(new_dat_labels)*0.2-1)%>%
+  #     as.matrix()
+  # 
+  #   new_train_matrix <- head(new_dat, nrow(new_dat)*0.8)%>%
+  #     as.matrix()
+  #   new_train_labels <- head(new_dat_labels, length(new_dat_labels)*0.8) %>%
+  #     as.matrix()
+  # 
+  #   xgb_train <- xgb.DMatrix(data = new_train_matrix, label = new_train_labels)
+  #   xgb_val <- xgb.DMatrix(data = new_val_matrix, label = new_val_labels)
+  #   xgb_dat <- list(xgb_train = xgb_train,
+  #               xgb_val = xgb_val)
+  #   xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
+  # }
+  # if(trainOrTest == "test"){
+  #   xgb_dat <- xgb.DMatrix(data = new_dat,label = new_dat_labels)
+  # }
   
   return(xgb_dat)
 }
@@ -608,8 +610,8 @@ xgboost.model.pred <- function(flu_data, country, num_category,
   # xgb_tr <- xgb_tr_list[[1]]
   # xgb_val <- xgb_tr_list[[2]]
   
-  xgb_tr <- xgboost_dat(flu_data_complex, "train", start_year_tr, end_year_tr)
-  xgb_ts <- xgboost_dat(flu_data_complex, "test", start_year_ts, end_year_ts)
+  xgb_tr <- xgboost_dat(flu_data_complex, start_year_tr, end_year_tr)
+  xgb_ts <- xgboost_dat(flu_data_complex, start_year_ts, end_year_ts)
   
   # train the xgboost model
   # params.train <- list(booster = "gbtree", objective = "multi:softprob", gamma=0, num_class = 10,
