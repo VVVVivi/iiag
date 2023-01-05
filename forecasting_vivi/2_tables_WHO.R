@@ -29,11 +29,11 @@ fluWHO <- readRDS("./saved_objects/fluWHO.rds")
 fluWHO_incidence <- fluWHO[[1]]
 sel_iso_xgb <- fluWHO[[2]]
 
-acc_WHO_roll_fix <- readRDS("./saved_objects/acc_WHO_roll_fix.rds")
+acc_WHO_roll_fix <- readRDS("./saved_objects/acc_WHO_roll_fix_new.rds")
 baseline_acc <- readRDS("./saved_objects/acc_WHO_baseline.rds")
 gbm_complex_all <- readRDS("./saved_objects/df_gbm_complex_all.rds")
 indi_acc_baseline <- read.csv("./saved_objects/acc_hist_null_byYears.csv")
-indi_acc_roll_fix <- read.csv("./saved_objects/indi_acc_roll_fix_by_countryWeek.csv")
+indi_acc_roll_fix <- read.csv("./saved_objects/indi_acc_roll_fix_by_countryWeek_new.csv")
 
 countryISO$Country <- ifelse(countryISO$Country=="Moldova, Republic of", "Moldova", countryISO$Country)
 countryISO$Country <- ifelse(countryISO$Country=="United States", "USA", countryISO$Country)

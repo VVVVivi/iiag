@@ -86,7 +86,7 @@ prop_bar <- ggplot(data=prop_category, aes(x=Incidence_level, y=Proportion)) +
   # scale_y_continuous("Proportion",expand = c(0, 0),limits = c(0,1.00))+
   geom_text(aes(label=Prop_percent), vjust=-0.2, size=5)+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 14))
 
 prop_bar
 ggsave(filename = "./Figures/prop_category_all.pdf", width = 12, height = 8, dpi = 320, scale = 1)
@@ -136,14 +136,15 @@ epi_heat <- ggplot(data = df_epi_heat, aes(x = Year_week, y = Country))+
                       values = c("#fde725", "#b5de2b", "#6ece58", "#35b779", "#1f9e89",
                                  "#26828e", "#26828e", "#3e4989", "#482878", "#440154"))+
   theme_bw()+
-  theme(text = element_text(size = 20))
+  theme(axis.text=element_text(size=14),
+    text = element_text(size = 14))
 
 epi_heat
 
 ggsave(filename = "./Figures/category_heatmap.pdf", width = 12, height = 8, dpi = 320, scale = 1)
 ggsave(filename = "./Figures/category_heatmap.png", width = 12, height = 8, dpi = 320, scale = 1)
 
-ggarrange(prop_bar, epi_heat, labels = c("A", "B"),
+ggarrange(prop_bar, epi_heat, labels = c("A.", "B."),
           ncol = 1, nrow = 2, align = "v")
 
 ggsave(filename = "./Figures/category_barchart_heatmap.pdf", width = 8, height = 12, dpi = 320, scale = 1)
@@ -363,9 +364,11 @@ MZE_line_roll <- ggplot(MZE_score_roll, aes(x = Week_ahead,y = MZE, group = Year
   # ylim(0.1,0.45)+
   labs(y = "Mean-Zero Error",
        x = "n-week ahead",
-       title = "A. Extending window")+
+       # title = "A."
+       )+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 18),
+        axis.text=element_text(size=18))
 
 MZE_line_fix <- ggplot(MZE_score_fix, aes(x = Week_ahead,y = MZE, group=Year, color=Year))+
   geom_point(size = 3)+
@@ -376,13 +379,17 @@ MZE_line_fix <- ggplot(MZE_score_fix, aes(x = Week_ahead,y = MZE, group=Year, co
   # ylim(0.2,0.35)+
   labs(y = "Mean-Zero Error",
        x = "n-week ahead",
-       title = "B. Fixed window")+
+       # title = "B."
+       )+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 18),
+        axis.text=element_text(size=18))
 
 ggarrange(MZE_line_roll, MZE_line_fix,
           common.legend = TRUE, legend = "right",
-          # labels = c("A", "B"), 
+          labels = c("A.", "B."),
+          font.label = list(size = 20),
+          vjust = 1,
           ncol = 2, nrow = 1)
 
 ggsave(filename = "./Figures/MZE_roll_fix.pdf", width = 12, height = 8, dpi = 320, scale = 1)
@@ -398,9 +405,11 @@ MAE_line_roll <- ggplot(MAE_score_roll, aes(x = Week_ahead,y = macroMAE, group=Y
   # ylim(0.7,1.8)+
   labs(y = "macro-average Mean Absolute Error",
        x = "n-week ahead",
-       title = "A. Extending window")+
+       # title = "A. Extending window"
+       )+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=20))
 
 MAE_line_fix <- ggplot(MAE_score_fix, aes(x = Week_ahead,y = macroMAE, group=Year, color = Year))+
   geom_point(size = 3)+
@@ -411,14 +420,18 @@ MAE_line_fix <- ggplot(MAE_score_fix, aes(x = Week_ahead,y = macroMAE, group=Yea
   # ylim(1.6, 2.75)+
   labs(y = "macro-average Mean Absolute Error",
        x = "n-week ahead",
-       title = "B. Fixed window")+
+       # title = "B. Fixed window"
+       )+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=20))
 
 ggarrange(MAE_line_roll, MAE_line_fix,
           common.legend = TRUE, legend = "right",
-          # labels = c("A", "B"), 
-          ncol = 2, nrow = 1)    
+          labels = c("A.", "B."), 
+          font.label = list(size = 20),
+          vjust = 1,
+          ncol = 2, nrow = 1) 
 
 ggsave(filename = "./Figures/MAE_roll_fix.pdf", width = 12, height = 8, dpi = 320, scale = 1)
 ggsave(filename = "./Figures/MAE_roll_fix.png", width = 12, height = 8, dpi = 320, scale = 1)
@@ -442,45 +455,60 @@ df_MZE_baseline_roll_17 <- df_MZE_baseline_roll %>%
   filter(Year == 2017)
 
 MZE_baseline_roll_15 <- ggplot(df_MZE_baseline_roll_15, aes(x = Week_ahead,y = MZE, group=Model))+
-  geom_point(aes(color = Model, shape = Model),size = 3)+
-  geom_line(aes(color = Model, linetype = Model), size = 1)+
+  geom_point(aes(color = Model, shape = Model),size = 4)+
+  geom_line(aes(color = Model, linetype = Model), size = 1.5)+
   geom_errorbar(aes(ymin = lb, ymax = ub, color = Model, linetype = Model),
-                position=position_dodge(0.05), size = 1)+
+                position=position_dodge(0.05), size = 1.5)+
   coord_cartesian(ylim = c(0,0.6))+
-  labs(title = "A.year 2015",
+  labs(# title = "A.year 2015",
        y = "Mean-Zero Error",
        x = "n-week ahead")+
   scale_color_brewer(palette="Dark2")+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=20),
+        legend.key.size = unit(3, 'cm'))
 
 MZE_baseline_roll_16 <- ggplot(df_MZE_baseline_roll_16, aes(x = Week_ahead,y = MZE, group=Model))+
-  geom_point(aes(color = Model, shape = Model),size = 3)+
-  geom_line(aes(color = Model, linetype = Model), size = 1)+
+  geom_point(aes(color = Model, shape = Model),size = 4)+
+  geom_line(aes(color = Model, linetype = Model), size = 1.5)+
   geom_errorbar(aes(ymin = lb, ymax = ub, color = Model, linetype = Model),
-                position=position_dodge(0.05), size = 1)+
+                position=position_dodge(0.05), size = 1.5)+
   coord_cartesian(ylim = c(0,0.6))+
-  labs(title = "B.year 2016",
+  labs(# title = "B.year 2016",
        y = "Mean-Zero Error",
        x = "n-week ahead")+
   scale_color_brewer(palette="Dark2")+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=20),
+        legend.key.size = unit(3, 'cm'))
 
 MZE_baseline_roll_17 <- ggplot(df_MZE_baseline_roll_17, aes(x = Week_ahead,y = MZE, group=Model))+
-  geom_point(aes(color = Model, shape = Model),size = 3)+
-  geom_line(aes(color = Model, linetype = Model), size = 1)+
+  geom_point(aes(color = Model, shape = Model),size = 4)+
+  geom_line(aes(color = Model, linetype = Model), size = 1.5)+
   geom_errorbar(aes(ymin = lb, ymax = ub, color = Model, linetype = Model),
-                position=position_dodge(0.05), size = 1)+
+                position=position_dodge(0.05), size = 1.5)+
   coord_cartesian(ylim = c(0,0.6))+
-  labs(title = "C.year 2017",
+  labs(# title = "C.year 2017",
        y = "Mean-Zero Error",
        x = "n-week ahead")+
   scale_color_brewer(palette="Dark2")+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=20),
+        legend.key.size = unit(3, 'cm'))
 
 ggarrange(MZE_baseline_roll_15, MZE_baseline_roll_16, MZE_baseline_roll_17,
+          labels = c("A.", "B.", "C."), 
+          vjust = 1, 
+          font.label = list(size = 20),
           common.legend = TRUE, legend = "bottom", ncol = 3, nrow = 1)
 
 ggsave(filename = "./Figures/MZE_baseline_roll.pdf", width = 14, height = 10, dpi = 320, scale = 1)
@@ -504,45 +532,60 @@ df_MAE_baseline_roll_17 <- df_MAE_baseline_roll %>%
   filter(Year == 2017)
 
 MAE_baseline_roll_15 <- ggplot(df_MAE_baseline_roll_15, aes(x = Week_ahead,y = macroMAE, group=Model))+
-  geom_point(aes(color = Model, shape = Model),size = 3)+
-  geom_line(aes(color = Model, linetype = Model), size = 1)+
+  geom_point(aes(color = Model, shape = Model),size = 4)+
+  geom_line(aes(color = Model, linetype = Model), size = 1.5)+
   geom_errorbar(aes(ymin = lb, ymax = ub, color = Model, linetype = Model),
-                position=position_dodge(0.05), size = 1)+
+                position=position_dodge(0.05), size = 1.5)+
   coord_cartesian(ylim = c(0,2.5))+
-  labs(title = "A.year 2015",
+  labs(# title = "A.year 2015",
        y = "macro-average Mean Absolute Error",
        x = "n-week ahead")+
   scale_color_brewer(palette="Dark2")+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=20),
+        legend.key.size = unit(3, 'cm'))
 
 MAE_baseline_roll_16 <- ggplot(df_MAE_baseline_roll_16, aes(x = Week_ahead,y = macroMAE, group=Model))+
-  geom_point(aes(color = Model, shape = Model),size = 3)+
-  geom_line(aes(color = Model, linetype = Model), size = 1)+
+  geom_point(aes(color = Model, shape = Model),size = 4)+
+  geom_line(aes(color = Model, linetype = Model), size = 1.5)+
   geom_errorbar(aes(ymin = lb, ymax = ub, color = Model, linetype = Model),
-                position=position_dodge(0.05), size = 1)+
+                position=position_dodge(0.05), size = 1.5)+
   coord_cartesian(ylim = c(0,2.5))+
-  labs(title = "B.year 2016",
+  labs(# title = "B.year 2016",
        y = "macro-average Mean Absolute Error",
        x = "n-week ahead")+
   scale_color_brewer(palette="Dark2")+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=20),
+        legend.key.size = unit(3, 'cm'))
 
 MAE_baseline_roll_17 <- ggplot(df_MAE_baseline_roll_17, aes(x = Week_ahead,y = macroMAE, group=Model))+
-  geom_point(aes(color = Model, shape = Model),size = 3)+
-  geom_line(aes(color = Model, linetype = Model), size = 1)+
+  geom_point(aes(color = Model, shape = Model),size = 4)+
+  geom_line(aes(color = Model, linetype = Model), size = 1.5)+
   geom_errorbar(aes(ymin = lb, ymax = ub, color = Model, linetype = Model),
-                position=position_dodge(0.05), size = 1)+
+                position=position_dodge(0.05), size = 1.5)+
   coord_cartesian(ylim = c(0,2.5))+
-  labs(title = "C.year 2017",
+  labs(# title = "C.year 2017",
        y = "macro-average Mean Absolute Error",
        x = "n-week ahead")+
   scale_color_brewer(palette="Dark2")+
   theme_bw()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.title = element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.key.size = unit(3, 'cm'))
 
 ggarrange(MAE_baseline_roll_15, MAE_baseline_roll_16, MAE_baseline_roll_17,
+          labels = c("A.", "B.", "C."), 
+          vjust = 1, 
+          font.label = list(size = 20),
           common.legend = TRUE, legend = "bottom", ncol = 3, nrow = 1)
 
 ggsave(filename = "./Figures/MAE_baseline_roll.pdf", width = 14, height = 10, dpi = 320, scale = 1)
@@ -597,78 +640,113 @@ df_heatmap_MAE_17 <- indi_acc_roll_fix %>%
   dplyr::select(-Accuracy, -MZE) %>% 
   mutate(Country = factor(Country, levels = unique(Country)))
 
+#' MZE
 heatmap_MZE_15 <- ggplot(data = df_heatmap_MZE_15, aes(x = Week_ahead, y = Country, fill = MZE))+
   geom_tile(color= "white")+
-  geom_text(aes(label = sprintf(MZE, fmt = '%#.3f')), color = "black", size = 4)+
+  geom_text(aes(label = sprintf(MZE, fmt = '%#.3f')), color = "black", size = 5)+
   scale_fill_distiller(palette = "Blues")+
   labs(# title = "A.year 2015",
        x = "n-week ahead")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.title = element_text(size=20),
+        legend.key.width = unit(2, 'cm')
+        # legend.text = element_text(size=17)
+        )
 
 heatmap_MZE_16 <- ggplot(data = df_heatmap_MZE_16, aes(x = Week_ahead, y = Country, fill = MZE))+
   geom_tile(color= "white")+
-  geom_text(aes(label = sprintf(MZE, fmt = '%#.3f')), color = "black", size = 4)+
+  geom_text(aes(label = sprintf(MZE, fmt = '%#.3f')), color = "black", size = 5)+
   scale_fill_distiller(palette = "Blues")+
   labs(#title = "B.year 2016",
        x = "n-week ahead")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.title = element_text(size=20),
+        legend.key.width = unit(2, 'cm')
+        # legend.text = element_text(size=17)
+        )
 
 heatmap_MZE_17 <- ggplot(data = df_heatmap_MZE_17, aes(x = Week_ahead, y = Country, fill = MZE))+
   geom_tile(color= "white")+
-  geom_text(aes(label = sprintf(MZE, fmt = '%#.3f')), color = "black", size = 4)+
+  geom_text(aes(label = sprintf(MZE, fmt = '%#.3f')), color = "black", size = 5)+
   scale_fill_distiller(palette = "Blues")+
   labs(#title = "C.year 2017",
        x = "n-week ahead")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.title = element_text(size=20),
+        legend.key.width = unit(2, 'cm')
+        # legend.text = element_text(size=17)
+        )
 
 ggarrange(heatmap_MZE_15, 
-          heatmap_MZE_16 + theme(axis.text.y=element_blank(),
-                                                 axis.title.y=element_blank()), 
-          heatmap_MZE_17 + theme(axis.text.y=element_blank(),
-                                 axis.title.y=element_blank()), 
+          heatmap_MZE_16, 
+          # + theme(axis.text.y=element_blank(),
+          #                                        axis.title.y=element_blank()), 
+          heatmap_MZE_17,
+          # + theme(axis.text.y=element_blank(),
+          #                        axis.title.y=element_blank()), 
           ncol = 3, nrow = 1, common.legend = TRUE,legend = "bottom",
-          labels = c("A.2015", "B.2016", "C.2017"),
+          labels = c("A.", "B.", "C."), vjust = 1, 
+          font.label = list(size = 20),
           align = "v")
 ggsave(filename = "./Figures/heatmap_acc_MZE.pdf", width = 14, height = 10, dpi = 320, scale = 1)
 ggsave(filename = "./Figures/heatmap_acc_MZE.png", width = 14, height = 10, dpi = 320, scale = 1)
 
+#' mMAE
 heatmap_MAE_15 <- ggplot(data = df_heatmap_MAE_15, aes(x = Week_ahead, y = Country, fill = macroMAE))+
   geom_tile(color= "white")+
-  geom_text(aes(label = sprintf(macroMAE, fmt = '%#.3f')), color = "black", size = 4)+
+  geom_text(aes(label = sprintf(macroMAE, fmt = '%#.3f')), color = "black", size = 5)+
   scale_fill_distiller(palette = "Oranges")+
   labs(# title = " ",
        x = "n-week ahead")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.title = element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.key.width = unit(2, 'cm'))
 
 heatmap_MAE_16 <- ggplot(data = df_heatmap_MAE_16, aes(x = Week_ahead, y = Country, fill = macroMAE))+
   geom_tile(color= "white")+
-  geom_text(aes(label = sprintf(macroMAE, fmt = '%#.3f')), color = "black", size = 4)+
+  geom_text(aes(label = sprintf(macroMAE, fmt = '%#.3f')), color = "black", size = 5)+
   scale_fill_distiller(palette = "Oranges")+
   labs(# title = "A.year 2015",
     x = "n-week ahead")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.title = element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.key.width = unit(2, 'cm'))
 
 heatmap_MAE_17 <- ggplot(data = df_heatmap_MAE_17, aes(x = Week_ahead, y = Country, fill = macroMAE))+
   geom_tile(color= "white")+
-  geom_text(aes(label = sprintf(macroMAE, fmt = '%#.3f')), color = "black", size = 4)+
+  geom_text(aes(label = sprintf(macroMAE, fmt = '%#.3f')), color = "black", size = 5)+
   scale_fill_distiller(palette = "Oranges")+
   labs(# title = "A.year 2015",
     x = "n-week ahead")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 20),
+        axis.text=element_text(size=19),
+        legend.title = element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.key.width = unit(2, 'cm'))
 
 ggarrange(heatmap_MAE_15, 
-          heatmap_MAE_16 + theme(axis.text.y=element_blank(),
-                                 axis.title.y=element_blank()), 
-          heatmap_MAE_16 + theme(axis.text.y=element_blank(),
-                                 axis.title.y=element_blank()), 
+          heatmap_MAE_16, 
+          # + theme(axis.text.y=element_blank(),
+          #                        axis.title.y=element_blank()), 
+          heatmap_MAE_17, 
+          # + theme(axis.text.y=element_blank(),
+          #                        axis.title.y=element_blank()), 
           ncol = 3, nrow = 1, common.legend = TRUE,legend = "bottom",
-          labels = c("A.2015", "B.2016", "C.2017"),
+          labels = c("A.", "B.", "C."), vjust = 1, 
+          font.label = list(size = 20),
           align = "v")
 ggsave(filename = "./Figures/heatmap_acc_MAE.pdf", width = 14, height = 10, dpi = 320, scale = 1)
 ggsave(filename = "./Figures/heatmap_acc_MAE.png", width = 14, height = 10, dpi = 320, scale = 1)
@@ -817,48 +895,61 @@ heatmap_1week_roll_15 <- ggplot(data = freq_table_1week_roll_15, aes(x = Observa
                                             y = Prediction,
                                             fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "A.year 2015")+
+  # labs(title = "A.year 2015")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
 heatmap_1week_roll_16 <- ggplot(data = freq_table_1week_roll_16, aes(x = Observation, 
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")), color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")), color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "B.year 2016")+
+  # labs(title = "B.year 2016")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
 heatmap_1week_roll_17 <- ggplot(data = freq_table_1week_roll_17, aes(x = Observation, 
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")), color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")), color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "C.year 2017")+
+  # labs(title = "C.year 2017")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
-heatmap_1week_roll <- ggarrange(heatmap_1week_roll_15, heatmap_1week_roll_16, heatmap_1week_roll_17,
-          common.legend = TRUE, legend = "right", ncol = 3, nrow = 1)
+heatmap_1week_roll <- ggarrange(heatmap_1week_roll_15+theme(legend.position = "none"),
+                                heatmap_1week_roll_16+theme(legend.position = "none"), 
+                                heatmap_1week_roll_17+theme(legend.position = "none"),
+                                labels = c("A."), font.label = list(size = 24), vjust=1,hjust = -0.4,
+                                # common.legend = TRUE, legend = NULL, 
+                                ncol = 3, nrow = 1)
 
-annotate_figure(heatmap_1week_roll, top = text_grob("1-week ahead", face = "bold", size = 18))
+# annotate_figure(heatmap_1week_roll, top = text_grob("1-week ahead", face = "bold", size = 18))
 
 ggsave(filename = "./Figures/heatmap_1week_roll.pdf", width = 16, height = 10, dpi = 320, scale = 1)
 ggsave(filename = "./Figures/heatmap_1week_roll.png", width = 16, height = 10, dpi = 320, scale = 1)
@@ -869,48 +960,61 @@ heatmap_2week_roll_15 <- ggplot(data = freq_table_2week_roll_15, aes(x = Observa
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "A.year 2015")+
+  # labs(title = "A.year 2015")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
 heatmap_2week_roll_16 <- ggplot(data = freq_table_2week_roll_16, aes(x = Observation, 
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "B.year 2016")+
+  # labs(title = "B.year 2016")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
 heatmap_2week_roll_17 <- ggplot(data = freq_table_2week_roll_17, aes(x = Observation, 
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "C.year 2017")+
+  # labs(title = "C.year 2017")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
-heatmap_2week_roll <- ggarrange(heatmap_2week_roll_15, heatmap_2week_roll_16, heatmap_2week_roll_17,
-                                common.legend = TRUE, legend = "right", ncol = 3, nrow = 1)
+heatmap_2week_roll <- ggarrange(heatmap_2week_roll_15+theme(legend.position = "none"), 
+                                heatmap_2week_roll_16+theme(legend.position = "none"), 
+                                heatmap_2week_roll_17+theme(legend.position = "none"),
+                                labels = c("B."), font.label = list(size = 24), vjust = 0.5,
+                                # common.legend = TRUE, legend = NULL, 
+                                ncol = 3, nrow = 1)
 
-annotate_figure(heatmap_2week_roll, top = text_grob("2-week ahead", face = "bold", size = 18))
+# annotate_figure(heatmap_2week_roll, top = text_grob("2-week ahead", face = "bold", size = 18))
 
 ggsave(filename = "./Figures/heatmap_2week_roll.pdf", width = 16, height = 10, dpi = 320, scale = 1)
 ggsave(filename = "./Figures/heatmap_2week_roll.png", width = 16, height = 10, dpi = 320, scale = 1)
@@ -920,48 +1024,61 @@ heatmap_3week_roll_15 <- ggplot(data = freq_table_3week_roll_15, aes(x = Observa
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "A.year 2015")+
+  # labs(title = "A.year 2015")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
 heatmap_3week_roll_16 <- ggplot(data = freq_table_3week_roll_16, aes(x = Observation, 
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "B.year 2016")+
+  # labs(title = "B.year 2016")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
 heatmap_3week_roll_17 <- ggplot(data = freq_table_3week_roll_17, aes(x = Observation, 
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
                        name="Relative\nfreqency")+
-  labs(title = "C.year 2017")+
+  # labs(title = "C.year 2017")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
-heatmap_3week_roll <- ggarrange(heatmap_3week_roll_15, heatmap_3week_roll_16, heatmap_3week_roll_17,
-                                common.legend = TRUE, legend = "right", ncol = 3, nrow = 1)
+heatmap_3week_roll <- ggarrange(heatmap_3week_roll_15+theme(legend.position = "none"), 
+                                heatmap_3week_roll_16+theme(legend.position = "none"),
+                                heatmap_3week_roll_17+theme(legend.position = "none"),
+                                labels = c('C.'),font.label = list(size = 24), vjust=0.5, 
+                                # common.legend = TRUE, legend = NULL, 
+                                ncol = 3, nrow = 1)
 
-annotate_figure(heatmap_3week_roll, top = text_grob("3-week ahead", face = "bold", size = 18))
+# annotate_figure(heatmap_3week_roll, top = text_grob("3-week ahead", face = "bold", size = 18))
 
 ggsave(filename = "./Figures/heatmap_3week_roll.pdf", width = 16, height = 10, dpi = 320, scale = 1)
 ggsave(filename = "./Figures/heatmap_3week_roll.png", width = 16, height = 10, dpi = 320, scale = 1)
@@ -971,134 +1088,161 @@ heatmap_4week_roll_15 <- ggplot(data = freq_table_4week_roll_15, aes(x = Observa
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
-                       name="Relative\nfreqency")+
-  labs(title = "A.year 2015")+
+                       name="Relative freqency")+
+  # labs(title = "A.year 2015")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=22),
+        legend.title = element_text(size=24, vjust = 1.1),
+        legend.position = "bottom")
 
 heatmap_4week_roll_16 <- ggplot(data = freq_table_4week_roll_16, aes(x = Observation, 
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
-                       name="Relative\nfreqency")+
-  labs(title = "B.year 2016")+
+                       name="Relative freqency")+
+  # labs(title = "B.year 2016")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
 heatmap_4week_roll_17 <- ggplot(data = freq_table_4week_roll_17, aes(x = Observation, 
                                                                      y = Prediction,
                                                                      fill = freq))+
   geom_tile(color= "white")+
-  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 4)+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
   # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
   scale_fill_gradient2(low="navy", high="red", 
                        midpoint= 0.3, limits=c(0,1),
                        na.value = "grey95",
-                       name="Relative\nfreqency")+
-  labs(title = "C.year 2017")+
+                       name="Relative freqency")+
+  # labs(title = "C.year 2017")+
   theme_minimal()+
-  theme(text = element_text(size = 18))
+  theme(text = element_text(size = 22),
+        axis.text=element_text(size=20),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=22))
 
-heatmap_4week_roll <- ggarrange(heatmap_4week_roll_15, heatmap_4week_roll_16, heatmap_4week_roll_17,
-                                common.legend = TRUE, legend = "right", ncol = 3, nrow = 1)
+heatmap_4week_roll <- ggarrange(heatmap_4week_roll_15+theme(legend.key.width = unit(2, 'cm')), 
+                                heatmap_4week_roll_16, heatmap_4week_roll_17,
+                                labels = c("D."),font.label = list(size = 24), vjust=0.5,
+                                common.legend = TRUE, legend = "bottom", ncol = 3, nrow = 1)
 
-annotate_figure(heatmap_4week_roll, top = text_grob("4-week ahead", face = "bold", size = 18))
+# annotate_figure(heatmap_4week_roll, top = text_grob("4-week ahead", face = "bold", size = 18))
 
 ggsave(filename = "./Figures/heatmap_4week_roll.pdf", width = 16, height = 10, dpi = 320, scale = 1)
 ggsave(filename = "./Figures/heatmap_4week_roll.png", width = 16, height = 10, dpi = 320, scale = 1)
 
+#' combine 1 to 4-week ahead frequency heatmap into one panel - 3 cols * 4 rows
+ggarrange(heatmap_1week_roll, heatmap_2week_roll, heatmap_3week_roll, heatmap_4week_roll, 
+                    ncol = 1, nrow = 4, 
+                    # common.legend = TRUE,legend = "bottom",
+                    # labels = c("A.", "B.", "C.", "D"), vjust = 1, 
+                    # font.label = list(size = 24), 
+                    align = "v")
+
+ggsave(filename = "./Figures/heatmap_allWeeks_roll.pdf", width = 22, height = 26, dpi = 320, scale = 1)
+ggsave(filename = "./Figures/heatmap_allWeeks_roll.png", width = 22, height = 26, dpi = 320, scale = 1)
+
 ########### Time series plot ############
 
 #' four countries - only XGBoost
-TS_1week <- rbind(acc_WHO_roll_fix$acc_1week_pred15_rol$pred, acc_WHO_roll_fix$acc_1week_pred16_rol$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_1week_pred17_rol$pred)
-
-TS_1week_MZE <- TS_1week %>% 
-  filter(Country %in% c("MDA", "NLD", "USA", "AUT")) %>%
-  mutate(Week_ahead = "1-week")
-
-TS_2week <- rbind(acc_WHO_roll_fix$acc_2week_pred15_rol$pred, acc_WHO_roll_fix$acc_2week_pred16_rol$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_2week_pred17_rol$pred)
-
-TS_2week_MZE <- TS_2week%>% 
-  filter(Country %in% c("MDA", "NLD", "USA", "AUT"))%>%
-  mutate(Week_ahead = "2-week")
-
-TS_3week <- rbind(acc_WHO_roll_fix$acc_3week_pred15_rol$pred, acc_WHO_roll_fix$acc_3week_pred16_rol$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_3week_pred17_rol$pred)
-
-TS_3week_MZE <- TS_3week %>% 
-  filter(Country %in% c("MDA", "NLD", "USA", "AUT"))%>%
-  mutate(Week_ahead = "3-week")
-
-TS_4week <- rbind(acc_WHO_roll_fix$acc_4week_pred15_rol$pred, acc_WHO_roll_fix$acc_4week_pred16_rol$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_4week_pred17_rol$pred)
-
-TS_4week_MZE <- TS_4week %>% 
-  filter(Country %in% c("MDA", "NLD", "USA", "AUT"))%>%
-  mutate(Week_ahead = "4-week")
-
-TS_overall_MZE <- rbind(TS_1week_MZE, TS_2week_MZE) %>% 
-  rbind(., TS_3week_MZE) %>% 
-  rbind(., TS_4week_MZE) %>% 
-  mutate(Week_ahead = factor(Week_ahead, levels = unique(Week_ahead)),
-         Country = case_when(Country == "AUT" ~"Austria",
-                             Country == "MDA" ~ "Moldova",
-                             Country == "NLD" ~ "Netherlands",
-                             Country == "USA" ~ "USA")) 
-
-df_plot_TS_MZE <- TS_overall_MZE %>% 
-  mutate(Year = substr(week_time,0,4),
-         Week = substr(week_time,6,7))%>% 
-  group_by(Country, Year, Week_ahead) %>%
-  mutate(Week = as.numeric(Week)) %>% 
-  tidyr::complete(Week = 1:53) %>% 
-  ungroup(Country, Year, Week_ahead) %>%
-  mutate(Week = sprintf("%02d", Week)) %>%
-  dplyr::select(-week_time) %>% 
-  mutate(Year_week = paste0(Year,"-", Week)) %>% 
-  tidyr::pivot_longer(., 5:6, names_to = "stat", values_to = "value") %>% 
-  rename(Category = stat,
-         Incidence_level = value) %>% 
-  mutate(Year_week = gsub("-", "-W", Year_week, fixed = TRUE),
-         Incidence_level = as.numeric(Incidence_level),
-         Category = factor(Category, levels = c("Observation", "Prediction"))) %>% 
-  mutate(Year_week = week2date(Year_week)) %>% 
-  mutate(Country = factor(Country, levels = c("Moldova","USA","Netherlands", "Austria")))
-  
-df_plot_TS_MZE <- df_plot_TS_MZE[-which(df_plot_TS_MZE$Year!=2015 & df_plot_TS_MZE$Week=="53"), ]
-
-ggplot(df_plot_TS_MZE, aes(x = Year_week,y = Incidence_level, group = Category))+
-  geom_point(aes(color = Category, shape = Category),size = 1.5)+
-  geom_line(aes(color = Category), size = 0.7)+
-  scale_y_continuous(breaks = c(1:10))+
-  labs(y = "Incidence level",
-       x = "Year")+
-  facet_grid(Country ~ Week_ahead)+
-  scale_colour_manual(values = c("#E08214", "#8073AC"))+
-  scale_alpha_manual(values = c(1, 0.5))+
-  theme_bw()+
-  theme(text = element_text(size = 18))+
-  theme(
-    # strip.background = element_blank(),
-    # strip.text.x = element_blank()
-    text = element_text(size = 26),
-    legend.position="bottom",
-    axis.text.x = element_text(size=14),
-    # axis.text.y = element_text(size=22)
-    )
-ggsave(filename = "./Figures/Selected_country_TS.pdf", width = 18, height = 12, dpi = 320, scale = 1)
-ggsave(filename = "./Figures/Selected_country_TS.png", width = 18, height = 12, dpi = 320, scale = 1)
+# TS_1week <- rbind(acc_WHO_roll_fix$acc_1week_pred15_rol$pred, acc_WHO_roll_fix$acc_1week_pred16_rol$pred) %>% 
+#   rbind(., acc_WHO_roll_fix$acc_1week_pred17_rol$pred)
+# 
+# TS_1week_MZE <- TS_1week %>% 
+#   filter(Country %in% c("MDA", "NLD", "USA", "AUT")) %>%
+#   mutate(Week_ahead = "1-week")
+# 
+# TS_2week <- rbind(acc_WHO_roll_fix$acc_2week_pred15_rol$pred, acc_WHO_roll_fix$acc_2week_pred16_rol$pred) %>% 
+#   rbind(., acc_WHO_roll_fix$acc_2week_pred17_rol$pred)
+# 
+# TS_2week_MZE <- TS_2week%>% 
+#   filter(Country %in% c("MDA", "NLD", "USA", "AUT"))%>%
+#   mutate(Week_ahead = "2-week")
+# 
+# TS_3week <- rbind(acc_WHO_roll_fix$acc_3week_pred15_rol$pred, acc_WHO_roll_fix$acc_3week_pred16_rol$pred) %>% 
+#   rbind(., acc_WHO_roll_fix$acc_3week_pred17_rol$pred)
+# 
+# TS_3week_MZE <- TS_3week %>% 
+#   filter(Country %in% c("MDA", "NLD", "USA", "AUT"))%>%
+#   mutate(Week_ahead = "3-week")
+# 
+# TS_4week <- rbind(acc_WHO_roll_fix$acc_4week_pred15_rol$pred, acc_WHO_roll_fix$acc_4week_pred16_rol$pred) %>% 
+#   rbind(., acc_WHO_roll_fix$acc_4week_pred17_rol$pred)
+# 
+# TS_4week_MZE <- TS_4week %>% 
+#   filter(Country %in% c("MDA", "NLD", "USA", "AUT"))%>%
+#   mutate(Week_ahead = "4-week")
+# 
+# TS_overall_MZE <- rbind(TS_1week_MZE, TS_2week_MZE) %>% 
+#   rbind(., TS_3week_MZE) %>% 
+#   rbind(., TS_4week_MZE) %>% 
+#   mutate(Week_ahead = factor(Week_ahead, levels = unique(Week_ahead)),
+#          Country = case_when(Country == "AUT" ~"Austria",
+#                              Country == "MDA" ~ "Moldova",
+#                              Country == "NLD" ~ "Netherlands",
+#                              Country == "USA" ~ "USA")) 
+# 
+# df_plot_TS_MZE <- TS_overall_MZE %>% 
+#   mutate(Year = substr(week_time,0,4),
+#          Week = substr(week_time,6,7))%>% 
+#   group_by(Country, Year, Week_ahead) %>%
+#   mutate(Week = as.numeric(Week)) %>% 
+#   tidyr::complete(Week = 1:53) %>% 
+#   ungroup(Country, Year, Week_ahead) %>%
+#   mutate(Week = sprintf("%02d", Week)) %>%
+#   dplyr::select(-week_time) %>% 
+#   mutate(Year_week = paste0(Year,"-", Week)) %>% 
+#   tidyr::pivot_longer(., 5:6, names_to = "stat", values_to = "value") %>% 
+#   rename(Category = stat,
+#          Incidence_level = value) %>% 
+#   mutate(Year_week = gsub("-", "-W", Year_week, fixed = TRUE),
+#          Incidence_level = as.numeric(Incidence_level),
+#          Category = factor(Category, levels = c("Observation", "Prediction"))) %>% 
+#   mutate(Year_week = week2date(Year_week)) %>% 
+#   mutate(Country = factor(Country, levels = c("Moldova","USA","Netherlands", "Austria")))
+#   
+# df_plot_TS_MZE <- df_plot_TS_MZE[-which(df_plot_TS_MZE$Year!=2015 & df_plot_TS_MZE$Week=="53"), ]
+# 
+# ggplot(df_plot_TS_MZE, aes(x = Year_week,y = Incidence_level, group = Category))+
+#   geom_point(aes(color = Category, shape = Category),size = 3)+
+#   geom_line(aes(color = Category), size = 1)+
+#   scale_y_continuous(breaks = c(1:10))+
+#   labs(y = "Incidence level",
+#        x = "Year")+
+#   facet_grid(Country ~ Week_ahead)+
+#   scale_colour_manual(values = c("#E08214", "#8073AC"))+
+#   scale_alpha_manual(values = c(1, 0.5))+
+#   theme_bw()+
+#   theme(
+#     # strip.background = element_blank(),
+#     strip.text.x = element_text(size = 24),
+#     strip.text.y = element_text(size = 20),
+#     text = element_text(size = 24),
+#     legend.position="bottom",
+#     axis.text.x = element_text(size=20, angle = 45, vjust = 0.5),
+#     axis.text.y = element_text(size=16),
+#     # axis.text=element_text(size=24),
+#     legend.title = element_text(size=24),
+#     legend.text = element_text(size=24),
+#     legend.key.size = unit(2, 'cm')
+#     )
+# ggsave(filename = "./Figures/Selected_country_TS.pdf", width = 12, height = 10, dpi = 320, scale = 1)
+# ggsave(filename = "./Figures/Selected_country_TS.png", width = 12, height = 10, dpi = 320, scale = 1)
 
 
 # MMAE
@@ -1149,8 +1293,8 @@ df_plot_TS_MMAE <- TS_overall_MMAE %>%
 df_plot_TS_MMAE <- df_plot_TS_MMAE[-which(df_plot_TS_MMAE$Year!=2015 & df_plot_TS_MMAE$Week=="53"), ]
 
 ggplot(df_plot_TS_MMAE, aes(x = Year_week,y = Incidence_level, group = Category))+
-  geom_point(aes(color = Category, shape = Category),size = 1.5)+
-  geom_line(aes(color = Category), size = 0.7)+
+  geom_point(aes(color = Category, shape = Category),size = 3)+
+  geom_line(aes(color = Category), size = 1)+
   scale_y_continuous(breaks = c(1:10))+
   labs(y = "Incidence level",
        x = "Year")+
@@ -1160,198 +1304,202 @@ ggplot(df_plot_TS_MMAE, aes(x = Year_week,y = Incidence_level, group = Category)
   theme_bw()+
   theme(text = element_text(size = 18))+
   theme(
-    # strip.background = element_blank(),
-    # strip.text.x = element_blank()
-    text = element_text(size = 26),
+    strip.text.x = element_text(size = 24),
+    strip.text.y = element_text(size = 20),
+    text = element_text(size = 24),
     legend.position="bottom",
-    axis.text.x = element_text(size=14),
-    # axis.text.y = element_text(size=22)
+    axis.text.x = element_text(size=20, angle = 45, vjust = 0.5),
+    axis.text.y = element_text(size=16),
+    # axis.text=element_text(size=24),
+    legend.title = element_text(size=24),
+    legend.text = element_text(size=24),
+    legend.key.size = unit(2, 'cm')
   )
-ggsave(filename = "./Figures/Selected_country_TS_MMAE.pdf", width = 18, height = 12, dpi = 320, scale = 1)
-ggsave(filename = "./Figures/Selected_country_TS_MMAE.png", width = 18, height = 12, dpi = 320, scale = 1)
+ggsave(filename = "./Figures/Selected_country_TS_MMAE.pdf", width = 12, height = 10, dpi = 320, scale = 1)
+ggsave(filename = "./Figures/Selected_country_TS_MMAE.png", width = 12, height = 10, dpi = 320, scale = 1)
 
 ########## TS plot(MZE) four countries - all models ##########
 # 1 week
-TS_rol_1week <- rbind(acc_WHO_roll_fix$acc_1week_pred15_rol$pred, acc_WHO_roll_fix$acc_1week_pred16_rol$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_1week_pred17_rol$pred) %>% 
+TS_rol_1week <- rbind(acc_WHO_roll_fix$acc_1week_pred15_rol$pred, acc_WHO_roll_fix$acc_1week_pred16_rol$pred) %>%
+  rbind(., acc_WHO_roll_fix$acc_1week_pred17_rol$pred) %>%
   mutate(Model = "XGBoost(extending window)")
 
-TS_fix_1week <- rbind(acc_WHO_roll_fix$acc_1week_pred15_fix$pred, acc_WHO_roll_fix$acc_1week_pred16_fix$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_1week_pred17_fix$pred) %>% 
+TS_fix_1week <- rbind(acc_WHO_roll_fix$acc_1week_pred15_fix$pred, acc_WHO_roll_fix$acc_1week_pred16_fix$pred) %>%
+  rbind(., acc_WHO_roll_fix$acc_1week_pred17_fix$pred) %>%
   mutate(Model = "XGBoost(fix window)")
 
-TS_hist_1week <- rbind(baseline_acc$acc_1week_pred15_hist$pred, baseline_acc$acc_1week_pred16_hist$pred) %>% 
-  rbind(., baseline_acc$acc_1week_pred17_hist$pred) %>% 
-  mutate(Model = "Hist")%>% 
+TS_hist_1week <- rbind(baseline_acc$acc_1week_pred15_hist$pred, baseline_acc$acc_1week_pred16_hist$pred) %>%
+  rbind(., baseline_acc$acc_1week_pred17_hist$pred) %>%
+  mutate(Model = "Hist")%>%
   rename(Prediction = OneWeek_ahead,
          Accuracy = Accurate)
 
-TS_null_1week <- rbind(baseline_acc$acc_1week_pred15_null$pred, baseline_acc$acc_1week_pred16_null$pred) %>% 
-  rbind(., baseline_acc$acc_1week_pred17_null$pred) %>% 
-  mutate(Model = "Null") %>% 
+TS_null_1week <- rbind(baseline_acc$acc_1week_pred15_null$pred, baseline_acc$acc_1week_pred16_null$pred) %>%
+  rbind(., baseline_acc$acc_1week_pred17_null$pred) %>%
+  mutate(Model = "Null") %>%
   rename(Prediction = OneWeek_ahead,
          Accuracy = Accurate)
 
-TS_all_1week <- rbind(TS_rol_1week, TS_fix_1week) %>% 
-  rbind(., TS_hist_1week) %>% 
-  rbind(., TS_null_1week)%>% 
+TS_all_1week <- rbind(TS_rol_1week, TS_fix_1week) %>%
+  rbind(., TS_hist_1week) %>%
+  rbind(., TS_null_1week)%>%
   mutate(Week_ahead = "1-week")
 
 # 2 week
-TS_rol_2week <- rbind(acc_WHO_roll_fix$acc_2week_pred15_rol$pred, acc_WHO_roll_fix$acc_2week_pred16_rol$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_2week_pred17_rol$pred) %>% 
+TS_rol_2week <- rbind(acc_WHO_roll_fix$acc_2week_pred15_rol$pred, acc_WHO_roll_fix$acc_2week_pred16_rol$pred) %>%
+  rbind(., acc_WHO_roll_fix$acc_2week_pred17_rol$pred) %>%
   mutate(Model = "XGBoost(extending window)")
 
-TS_fix_2week <- rbind(acc_WHO_roll_fix$acc_2week_pred15_fix$pred, acc_WHO_roll_fix$acc_2week_pred16_fix$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_2week_pred17_fix$pred) %>% 
+TS_fix_2week <- rbind(acc_WHO_roll_fix$acc_2week_pred15_fix$pred, acc_WHO_roll_fix$acc_2week_pred16_fix$pred) %>%
+  rbind(., acc_WHO_roll_fix$acc_2week_pred17_fix$pred) %>%
   mutate(Model = "XGBoost(fix window)")
 
-TS_hist_2week <- rbind(baseline_acc$acc_2week_pred15_hist$pred, baseline_acc$acc_2week_pred16_hist$pred) %>% 
-  rbind(., baseline_acc$acc_2week_pred17_hist$pred) %>% 
-  mutate(Model = "Hist")%>% 
-  dplyr::select(-OneWeek_ahead) %>% 
+TS_hist_2week <- rbind(baseline_acc$acc_2week_pred15_hist$pred, baseline_acc$acc_2week_pred16_hist$pred) %>%
+  rbind(., baseline_acc$acc_2week_pred17_hist$pred) %>%
+  mutate(Model = "Hist")%>%
+  dplyr::select(-OneWeek_ahead) %>%
   rename(Prediction = TwoWeek_ahead,
          Accuracy = Accurate)
 
-TS_null_2week <- rbind(baseline_acc$acc_2week_pred15_null$pred, baseline_acc$acc_2week_pred16_null$pred) %>% 
-  rbind(., baseline_acc$acc_2week_pred17_null$pred) %>% 
-  mutate(Model = "Null") %>% 
-  dplyr::select(-OneWeek_ahead) %>% 
+TS_null_2week <- rbind(baseline_acc$acc_2week_pred15_null$pred, baseline_acc$acc_2week_pred16_null$pred) %>%
+  rbind(., baseline_acc$acc_2week_pred17_null$pred) %>%
+  mutate(Model = "Null") %>%
+  dplyr::select(-OneWeek_ahead) %>%
   rename(Prediction = TwoWeek_ahead,
          Accuracy = Accurate)
 
-TS_all_2week <- rbind(TS_rol_2week, TS_fix_2week) %>% 
-  rbind(., TS_hist_2week) %>% 
-  rbind(., TS_null_2week)%>% 
+TS_all_2week <- rbind(TS_rol_2week, TS_fix_2week) %>%
+  rbind(., TS_hist_2week) %>%
+  rbind(., TS_null_2week)%>%
   mutate(Week_ahead = "2-week")
 
 # 3 week
-TS_rol_3week <- rbind(acc_WHO_roll_fix$acc_3week_pred15_rol$pred, acc_WHO_roll_fix$acc_3week_pred16_rol$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_3week_pred17_rol$pred) %>% 
+TS_rol_3week <- rbind(acc_WHO_roll_fix$acc_3week_pred15_rol$pred, acc_WHO_roll_fix$acc_3week_pred16_rol$pred) %>%
+  rbind(., acc_WHO_roll_fix$acc_3week_pred17_rol$pred) %>%
   mutate(Model = "XGBoost(extending window)")
 
-TS_fix_3week <- rbind(acc_WHO_roll_fix$acc_3week_pred15_fix$pred, acc_WHO_roll_fix$acc_3week_pred16_fix$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_3week_pred17_fix$pred) %>% 
+TS_fix_3week <- rbind(acc_WHO_roll_fix$acc_3week_pred15_fix$pred, acc_WHO_roll_fix$acc_3week_pred16_fix$pred) %>%
+  rbind(., acc_WHO_roll_fix$acc_3week_pred17_fix$pred) %>%
   mutate(Model = "XGBoost(fix window)")
 
-TS_hist_3week <- rbind(baseline_acc$acc_3week_pred15_hist$pred, baseline_acc$acc_3week_pred16_hist$pred) %>% 
-  rbind(., baseline_acc$acc_3week_pred17_hist$pred) %>% 
-  mutate(Model = "Hist")%>% 
-  dplyr::select(-OneWeek_ahead, -TwoWeek_ahead) %>% 
+TS_hist_3week <- rbind(baseline_acc$acc_3week_pred15_hist$pred, baseline_acc$acc_3week_pred16_hist$pred) %>%
+  rbind(., baseline_acc$acc_3week_pred17_hist$pred) %>%
+  mutate(Model = "Hist")%>%
+  dplyr::select(-OneWeek_ahead, -TwoWeek_ahead) %>%
   rename(Prediction = ThreeWeek_ahead,
          Accuracy = Accurate)
 
-TS_null_3week <- rbind(baseline_acc$acc_3week_pred15_null$pred, baseline_acc$acc_3week_pred16_null$pred) %>% 
-  rbind(., baseline_acc$acc_3week_pred17_null$pred) %>% 
-  mutate(Model = "Null") %>% 
-  dplyr::select(-OneWeek_ahead, -TwoWeek_ahead) %>% 
+TS_null_3week <- rbind(baseline_acc$acc_3week_pred15_null$pred, baseline_acc$acc_3week_pred16_null$pred) %>%
+  rbind(., baseline_acc$acc_3week_pred17_null$pred) %>%
+  mutate(Model = "Null") %>%
+  dplyr::select(-OneWeek_ahead, -TwoWeek_ahead) %>%
   rename(Prediction = ThreeWeek_ahead,
          Accuracy = Accurate)
 
-TS_all_3week <- rbind(TS_rol_3week, TS_fix_3week) %>% 
-  rbind(., TS_hist_3week) %>% 
-  rbind(., TS_null_3week)%>% 
+TS_all_3week <- rbind(TS_rol_3week, TS_fix_3week) %>%
+  rbind(., TS_hist_3week) %>%
+  rbind(., TS_null_3week)%>%
   mutate(Week_ahead = "3-week")
 
 # 4 week
-TS_rol_4week <- rbind(acc_WHO_roll_fix$acc_4week_pred15_rol$pred, acc_WHO_roll_fix$acc_4week_pred16_rol$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_4week_pred17_rol$pred) %>% 
+TS_rol_4week <- rbind(acc_WHO_roll_fix$acc_4week_pred15_rol$pred, acc_WHO_roll_fix$acc_4week_pred16_rol$pred) %>%
+  rbind(., acc_WHO_roll_fix$acc_4week_pred17_rol$pred) %>%
   mutate(Model = "XGBoost(extending window)")
 
-TS_fix_4week <- rbind(acc_WHO_roll_fix$acc_4week_pred15_fix$pred, acc_WHO_roll_fix$acc_4week_pred16_fix$pred) %>% 
-  rbind(., acc_WHO_roll_fix$acc_4week_pred17_fix$pred) %>% 
+TS_fix_4week <- rbind(acc_WHO_roll_fix$acc_4week_pred15_fix$pred, acc_WHO_roll_fix$acc_4week_pred16_fix$pred) %>%
+  rbind(., acc_WHO_roll_fix$acc_4week_pred17_fix$pred) %>%
   mutate(Model = "XGBoost(fix window)")
 
-TS_hist_4week <- rbind(baseline_acc$acc_4week_pred15_hist$pred, baseline_acc$acc_4week_pred16_hist$pred) %>% 
-  rbind(., baseline_acc$acc_4week_pred17_hist$pred) %>% 
-  mutate(Model = "Hist")%>% 
+TS_hist_4week <- rbind(baseline_acc$acc_4week_pred15_hist$pred, baseline_acc$acc_4week_pred16_hist$pred) %>%
+  rbind(., baseline_acc$acc_4week_pred17_hist$pred) %>%
+  mutate(Model = "Hist")%>%
   dplyr::select(-OneWeek_ahead, -TwoWeek_ahead, -ThreeWeek_ahead) %>%
   rename(Prediction = FourWeek_ahead,
          Accuracy = Accurate)
 
-TS_null_4week <- rbind(baseline_acc$acc_4week_pred15_null$pred, baseline_acc$acc_4week_pred16_null$pred) %>% 
-  rbind(., baseline_acc$acc_4week_pred17_null$pred) %>% 
-  mutate(Model = "Null") %>% 
+TS_null_4week <- rbind(baseline_acc$acc_4week_pred15_null$pred, baseline_acc$acc_4week_pred16_null$pred) %>%
+  rbind(., baseline_acc$acc_4week_pred17_null$pred) %>%
+  mutate(Model = "Null") %>%
   dplyr::select(-OneWeek_ahead, -TwoWeek_ahead, -ThreeWeek_ahead) %>%
   rename(Prediction = FourWeek_ahead,
          Accuracy = Accurate)
 
-TS_all_4week <- rbind(TS_rol_4week, TS_fix_4week) %>% 
-  rbind(., TS_hist_4week) %>% 
-  rbind(., TS_null_4week) %>% 
+TS_all_4week <- rbind(TS_rol_4week, TS_fix_4week) %>%
+  rbind(., TS_hist_4week) %>%
+  rbind(., TS_null_4week) %>%
   mutate(Week_ahead = "4-week")
 
-# combine together 
-TS_all_model <- rbind(TS_all_1week, TS_all_2week) %>% 
-  rbind(., TS_all_3week) %>% 
+# combine together
+TS_all_model <- rbind(TS_all_1week, TS_all_2week) %>%
+  rbind(., TS_all_3week) %>%
   rbind(., TS_all_4week)
-
-TS_all_model_select <- TS_all_model %>% 
-  filter(Country %in% c("MDA", "NLD", "USA", "AUT")) %>% 
-  mutate(Week_ahead = factor(Week_ahead, levels = unique(Week_ahead)),
-         Country = case_when(Country == "AUT" ~"Austria",
-                             Country == "MDA" ~ "Moldova",
-                             Country == "NLD" ~ "Netherlands",
-                             Country == "USA" ~ "USA"))
-
-obs <- TS_all_model_select %>%
-  tidyr::pivot_longer(., 4, names_to = "stat", values_to = "value") %>% 
-  dplyr::select(Country, week_time, Accuracy, Week_ahead, stat, value) %>% 
-  rename(Model= stat, 
-         Prediction = value) %>%
-  relocate(Prediction, .after = 2) %>% 
-  relocate(Model,  .before = 5)
-
-TS_all_model_select <- TS_all_model_select %>% 
-  dplyr::select(-Observation)
-
-df_TS_all_model_select <- rbind(TS_all_model_select, obs) %>% 
-  mutate(Year = substr(week_time,0,4),
-         Week = substr(week_time,6,7))%>% 
-  group_by(Country, Year, Week_ahead, Model) %>%
-  mutate(Week = as.numeric(Week)) %>% 
-  tidyr::complete(Week = 1:53) %>% 
-  ungroup(Country, Year, Week_ahead, Model) %>%
-  mutate(Week = sprintf("%02d", Week)) %>%
-  dplyr::select(-week_time) %>% 
-  mutate(Year_week = paste0(Year,"-", Week)) %>% 
-  # tidyr::pivot_longer(., 6:7, names_to = "stat", values_to = "value") %>% 
-  rename(
-         Incidence_level = Prediction) %>%
-  mutate(Year_week = gsub("-", "-W", Year_week, fixed = TRUE),
-         Incidence_level = as.numeric(Incidence_level),
-         # Category = factor(Category, levels = c("Observation", "Prediction"))
-         ) %>% 
-  mutate(Year_week = week2date(Year_week)) %>% 
-  mutate(Country = factor(Country, levels = c("Moldova","USA","Netherlands", "Austria")),
-         Model = factor(Model, levels = c("Observation", "XGBoost(extending window)", "XGBoost(fix window)",
-                                          "Hist", "Null")))
-
-ggplot(df_TS_all_model_select, aes(x = Year_week, y = Incidence_level,group = Model))+
-  geom_point(aes(y = Incidence_level, color = Model, shape = Model),size = 1.5)+
-  geom_line(aes(y = Incidence_level, color = Model), size = 0.7)+
-  scale_y_continuous(breaks = c(1:10))+
-  labs(y = "Incidence level",
-       x = "Year")+
-  facet_grid(Country ~ Week_ahead)+
-  scale_colour_manual(values = c("#FC4E07", "#00AFBB", "#C3D7A4", "#E08214", "#8073AC"))+
-  scale_alpha_manual(values = c(1, 0.5, 0.5, 0.5, 0.5))+
-  # scale_size_manual(values=c(2,2,2,2,2))+
-  theme_bw()+
-  theme(text = element_text(size = 18))+
-  theme(
-    # strip.background = element_blank(),
-    # strip.text.x = element_blank()
-    text = element_text(size = 28),
-    legend.position="bottom",
-    axis.text.x = element_text(size=18)
-    # axis.text.y = element_text(size=22)
-  )+
-  guides(linetype = guide_legend(override.aes = list(size = 3)))
-
-
-ggsave(filename = "./Figures/Selected_country_allModel_TS.pdf", width = 24, height = 14, dpi = 320, scale = 1)
-ggsave(filename = "./Figures/Selected_country_allModel_TS.png", width = 24, height = 14, dpi = 320, scale = 1)
+# 
+# TS_all_model_select <- TS_all_model %>% 
+#   filter(Country %in% c("MDA", "NLD", "USA", "AUT")) %>% 
+#   mutate(Week_ahead = factor(Week_ahead, levels = unique(Week_ahead)),
+#          Country = case_when(Country == "AUT" ~"Austria",
+#                              Country == "MDA" ~ "Moldova",
+#                              Country == "NLD" ~ "Netherlands",
+#                              Country == "USA" ~ "USA"))
+# 
+# obs <- TS_all_model_select %>%
+#   tidyr::pivot_longer(., 4, names_to = "stat", values_to = "value") %>% 
+#   dplyr::select(Country, week_time, Accuracy, Week_ahead, stat, value) %>% 
+#   rename(Model= stat, 
+#          Prediction = value) %>%
+#   relocate(Prediction, .after = 2) %>% 
+#   relocate(Model,  .before = 5)
+# 
+# TS_all_model_select <- TS_all_model_select %>% 
+#   dplyr::select(-Observation)
+# 
+# df_TS_all_model_select <- rbind(TS_all_model_select, obs) %>% 
+#   mutate(Year = substr(week_time,0,4),
+#          Week = substr(week_time,6,7))%>% 
+#   group_by(Country, Year, Week_ahead, Model) %>%
+#   mutate(Week = as.numeric(Week)) %>% 
+#   tidyr::complete(Week = 1:53) %>% 
+#   ungroup(Country, Year, Week_ahead, Model) %>%
+#   mutate(Week = sprintf("%02d", Week)) %>%
+#   dplyr::select(-week_time) %>% 
+#   mutate(Year_week = paste0(Year,"-", Week)) %>% 
+#   # tidyr::pivot_longer(., 6:7, names_to = "stat", values_to = "value") %>% 
+#   rename(
+#          Incidence_level = Prediction) %>%
+#   mutate(Year_week = gsub("-", "-W", Year_week, fixed = TRUE),
+#          Incidence_level = as.numeric(Incidence_level),
+#          # Category = factor(Category, levels = c("Observation", "Prediction"))
+#          ) %>% 
+#   mutate(Year_week = week2date(Year_week)) %>% 
+#   mutate(Country = factor(Country, levels = c("Moldova","USA","Netherlands", "Austria")),
+#          Model = factor(Model, levels = c("Observation", "XGBoost(extending window)", "XGBoost(fix window)",
+#                                           "Hist", "Null")))
+# 
+# ggplot(df_TS_all_model_select, aes(x = Year_week, y = Incidence_level,group = Model))+
+#   geom_point(aes(y = Incidence_level, color = Model, shape = Model),size = 1.5)+
+#   geom_line(aes(y = Incidence_level, color = Model), size = 0.7)+
+#   scale_y_continuous(breaks = c(1:10))+
+#   labs(y = "Incidence level",
+#        x = "Year")+
+#   facet_grid(Country ~ Week_ahead)+
+#   scale_colour_manual(values = c("#FC4E07", "#00AFBB", "#C3D7A4", "#E08214", "#8073AC"))+
+#   scale_alpha_manual(values = c(1, 0.5, 0.5, 0.5, 0.5))+
+#   # scale_size_manual(values=c(2,2,2,2,2))+
+#   theme_bw()+
+#   theme(text = element_text(size = 18))+
+#   theme(
+#     # strip.background = element_blank(),
+#     # strip.text.x = element_blank()
+#     text = element_text(size = 28),
+#     legend.position="bottom",
+#     axis.text.x = element_text(size=18)
+#     # axis.text.y = element_text(size=22)
+#   )+
+#   guides(linetype = guide_legend(override.aes = list(size = 3)))
+# 
+# 
+# ggsave(filename = "./Figures/Selected_country_allModel_TS.pdf", width = 24, height = 14, dpi = 320, scale = 1)
+# ggsave(filename = "./Figures/Selected_country_allModel_TS.png", width = 24, height = 14, dpi = 320, scale = 1)
 
 
 ########## TS plot(MMAE) four countries - all models ##########
@@ -1397,8 +1545,8 @@ df_TS_all_model_select_MMAE <- rbind(TS_all_model_select_MMAE, obs) %>%
                                           "Hist", "Null")))
 
 ggplot(df_TS_all_model_select_MMAE, aes(x = Year_week, y = Incidence_level,group = Model))+
-  geom_point(aes(y = Incidence_level, color = Model, shape = Model),size = 1.5)+
-  geom_line(aes(y = Incidence_level, color = Model), size = 0.7)+
+  geom_point(aes(y = Incidence_level, color = Model, shape = Model),size = 2)+
+  geom_line(aes(y = Incidence_level, color = Model), size = 0.8)+
   scale_y_continuous(breaks = c(1:10))+
   labs(y = "Incidence level",
        x = "Year")+
@@ -1409,15 +1557,19 @@ ggplot(df_TS_all_model_select_MMAE, aes(x = Year_week, y = Incidence_level,group
   theme_bw()+
   theme(text = element_text(size = 18))+
   theme(
-    # strip.background = element_blank(),
-    # strip.text.x = element_blank()
-    text = element_text(size = 28),
+    strip.text.x = element_text(size = 24),
+    strip.text.y = element_text(size = 22),
+    text = element_text(size = 24),
     legend.position="bottom",
-    axis.text.x = element_text(size=18)
-    # axis.text.y = element_text(size=22)
+    axis.text.x = element_text(size=20, angle = 45, vjust = 0.5),
+    axis.text.y = element_text(size=16),
+    # axis.text=element_text(size=24),
+    legend.title = element_text(size=24, hjust = 3),
+    legend.text = element_text(size=24),
+    legend.key.size = unit(2, 'cm')
   )+
-  guides(linetype = guide_legend(override.aes = list(size = 3)))
+  guides(linetype = guide_legend(override.aes = list(size = 3)))+
+  guides(color=guide_legend(nrow=2, byrow=TRUE))
 
-
-ggsave(filename = "./Figures/Selected_country_allModel_TS_MMAE.pdf", width = 24, height = 14, dpi = 320, scale = 1)
-ggsave(filename = "./Figures/Selected_country_allModel_TS_MMAE.png", width = 24, height = 14, dpi = 320, scale = 1)
+ggsave(filename = "./Figures/Selected_country_allModel_TS_MMAE.pdf", width = 14, height = 12, dpi = 320, scale = 1)
+ggsave(filename = "./Figures/Selected_country_allModel_TS_MMAE.png", width = 14, height = 12, dpi = 320, scale = 1)
