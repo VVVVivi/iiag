@@ -22,6 +22,7 @@ source("./gbm_complex_funcs.R")
 
 #' Load country list for WHO data.
 countryISO <- read.csv("C:/Users/haowe/Desktop/iiag/data_old/country_list_ISO.csv")
+countryISO<- read.csv("C:/Users/hw3616/Desktop/Imperial/Project1_Forecasting/Project_Coding/iiag/data_old/country_list_ISO.csv")
 
 #' Load data
 fluWHO <- readRDS("./saved_objects/fluWHO.rds")
@@ -788,7 +789,9 @@ freq_table_1week_roll_15 <- acc_WHO_roll_fix$acc_1week_pred15_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction) %>% 
+  mutate(Year = "2015",
+         nWeek_ahead = "1-week ahead")
 
 freq_table_1week_roll_16 <- acc_WHO_roll_fix$acc_1week_pred16_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -797,7 +800,9 @@ freq_table_1week_roll_16 <- acc_WHO_roll_fix$acc_1week_pred16_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction)  %>% 
+  mutate(Year = "2016",
+         nWeek_ahead = "1-week ahead")
 
 freq_table_1week_roll_17 <- acc_WHO_roll_fix$acc_1week_pred17_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -806,7 +811,9 @@ freq_table_1week_roll_17 <- acc_WHO_roll_fix$acc_1week_pred17_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction) %>% 
+  mutate(Year = "2017",
+         nWeek_ahead = "1-week ahead")
 
 freq_table_2week_roll_15 <- acc_WHO_roll_fix$acc_2week_pred15_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -815,7 +822,9 @@ freq_table_2week_roll_15 <- acc_WHO_roll_fix$acc_2week_pred15_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction) %>% 
+  mutate(Year = "2015",
+         nWeek_ahead = "2-week ahead")
 
 freq_table_2week_roll_16 <- acc_WHO_roll_fix$acc_2week_pred16_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -824,7 +833,9 @@ freq_table_2week_roll_16 <- acc_WHO_roll_fix$acc_2week_pred16_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction)%>% 
+  mutate(Year = "2016",
+         nWeek_ahead = "2-week ahead")
 
 freq_table_2week_roll_17 <- acc_WHO_roll_fix$acc_2week_pred17_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -833,7 +844,9 @@ freq_table_2week_roll_17 <- acc_WHO_roll_fix$acc_2week_pred17_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction)%>% 
+  mutate(Year = "2017",
+         nWeek_ahead = "2-week ahead")
 
 freq_table_3week_roll_15 <- acc_WHO_roll_fix$acc_3week_pred15_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -842,7 +855,9 @@ freq_table_3week_roll_15 <- acc_WHO_roll_fix$acc_3week_pred15_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction) %>% 
+  mutate(Year = "2015",
+         nWeek_ahead = "3-week ahead")
 
 freq_table_3week_roll_16 <- acc_WHO_roll_fix$acc_3week_pred16_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -851,7 +866,9 @@ freq_table_3week_roll_16 <- acc_WHO_roll_fix$acc_3week_pred16_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction)%>% 
+  mutate(Year = "2016",
+         nWeek_ahead = "3-week ahead")
 
 freq_table_3week_roll_17 <- acc_WHO_roll_fix$acc_3week_pred17_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -860,7 +877,9 @@ freq_table_3week_roll_17 <- acc_WHO_roll_fix$acc_3week_pred17_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction)%>% 
+  mutate(Year = "2017",
+         nWeek_ahead = "3-week ahead")
 
 freq_table_4week_roll_15 <- acc_WHO_roll_fix$acc_4week_pred15_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -869,7 +888,9 @@ freq_table_4week_roll_15 <- acc_WHO_roll_fix$acc_4week_pred15_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction)%>% 
+  mutate(Year = "2015",
+         nWeek_ahead = "4-week ahead")
 
 freq_table_4week_roll_16 <- acc_WHO_roll_fix$acc_4week_pred16_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -878,7 +899,9 @@ freq_table_4week_roll_16 <- acc_WHO_roll_fix$acc_4week_pred16_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction) %>% 
+  mutate(Year = "2016",
+         nWeek_ahead = "4-week ahead")
 
 freq_table_4week_roll_17 <- acc_WHO_roll_fix$acc_4week_pred17_rol$pred %>% 
   group_by(Observation, Prediction) %>%
@@ -887,7 +910,46 @@ freq_table_4week_roll_17 <- acc_WHO_roll_fix$acc_4week_pred17_rol$pred %>%
          Observation = factor(Observation, levels = c(1:10)),
          Prediction = factor(Prediction, levels = c(1:10))) %>% 
   ungroup(Observation, Prediction) %>% 
-  tidyr::complete(Observation, Prediction)
+  tidyr::complete(Observation, Prediction)%>% 
+  mutate(Year = "2017",
+         nWeek_ahead = "4-week ahead")
+
+freq_table_all <- rbind(freq_table_1week_roll_15, freq_table_1week_roll_16) %>% 
+  rbind(., freq_table_1week_roll_17) %>% 
+  rbind(., freq_table_2week_roll_15) %>% 
+  rbind(., freq_table_2week_roll_16) %>% 
+  rbind(., freq_table_2week_roll_17) %>% 
+  rbind(., freq_table_3week_roll_15) %>% 
+  rbind(., freq_table_3week_roll_16) %>% 
+  rbind(., freq_table_3week_roll_17) %>% 
+  rbind(., freq_table_4week_roll_15) %>% 
+  rbind(., freq_table_4week_roll_16) %>% 
+  rbind(., freq_table_4week_roll_17) %>%
+  mutate(Year = factor(Year, levels= c("2015","2016","2017")),
+         nWeek_ahead = factor(nWeek_ahead, levels = c("1-week ahead", "2-week ahead",
+                                                      "3-week ahead", "4-week ahead")))
+
+ggplot(data = freq_table_all, aes(x = Observation, 
+                                  y = Prediction,
+                                  fill = freq))+
+  geom_tile(color= "white")+
+  geom_text(aes(label=ifelse(!is.na(freq), round(freq, 2), "NA")),color = "black", size = 7.5)+
+  # geom_text(aes(Observation, Prediction, label = round(freq, 2)), color = "black", size = 4)+
+  scale_fill_gradient2(low="navy", high="red", 
+                       midpoint= 0.3, limits=c(0,1),
+                       na.value = "grey95",
+                       name="Relative\nfreqency")+
+  facet_grid(nWeek_ahead~Year)+
+  theme_minimal()+
+  theme(text = element_text(size = 30),
+        axis.text=element_text(size=30),
+        legend.text = element_text(size=25),
+        legend.title = element_text(size=25),
+        strip.text.y = element_text(size = 30),
+        strip.text.x = element_text(size = 30))
+
+ggsave(filename = "./Figures/heatmap_allWeeks_roll.pdf", width = 22, height = 26, dpi = 320, scale = 1)
+ggsave(filename = "./Figures/heatmap_allWeeks_roll.png", width = 22, height = 26, dpi = 320, scale = 1)
 
 
 #' 1-week ahead
